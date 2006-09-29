@@ -71,7 +71,7 @@ use Getopt::Long;
 use BatchSystem::SBS;
 require Exporter;
 our @ISA=qw(Exporter);
-our @EXPORT=qw(&init, $sbs);
+our @EXPORT=qw(&init $sbs);
 our $sbs;
 sub init{
   my $p=new Getopt::Long::Parser;

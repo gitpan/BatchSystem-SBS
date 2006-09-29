@@ -61,7 +61,7 @@
             <type>machine</type>
          </resource>
          <priority>5</priority>
-         <maxConcurentJob>1</maxConcurentJob>
+         <maxConcurentJob>7</maxConcurentJob>
       </oneQueue>
       <oneQueue>
          <name>single_high</name>

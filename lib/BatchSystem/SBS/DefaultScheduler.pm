@@ -379,6 +379,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 			       command=>$cmd,
 			       queue=>$queue,
 			       dir=>$dir,
+			       on_finished=>$hprms{on_finished},
 			       status=>'PENDING',
 			       resource=>undef,
 			      };
@@ -760,7 +761,16 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $h=$self->__joblist();
     my @pendingJobs;
     foreach(values(%{$self->__joblist()})){
-      push @pendingJobs, $_ if $_->{status}=~/^(PENDING)$/;
+      if($_->{status}=~/^(PENDING)$/){
+	if(defined $_->{on_finished}){
+	  my $iddep=$_->{on_finished};
+	  if($self->__joblist->{$iddep}{status}=~$FINISHED_JOB_STATUS){
+	    push @pendingJobs, $_;
+	  }
+	}else{
+	  push @pendingJobs, $_ ;
+	}
+      }
     }
     my @availResources;
     my $rscStatus=$self->__resourcesStatus();

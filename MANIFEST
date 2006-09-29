@@ -14,11 +14,11 @@ lib/BatchSystem/SBS.pm
 lib/BatchSystem/SBS/Common.pm
 lib/BatchSystem/SBS/DefaultScheduler.pm
 lib/BatchSystem/SBS/ScriptsCommon.pm
-scripts/batch-check.pl
-scripts/batch-remove.pl
-scripts/batch-submit.pl
-scripts/scheduler-print.pl
-scripts/scheduler-update.pl
+scripts/sbs-batch-check.pl
+scripts/sbs-batch-remove.pl
+scripts/sbs-batch-submit.pl
+scripts/sbs-scheduler-print.pl
+scripts/sbs-scheduler-update.pl
 t/00-load.t
 t/pod-coverage.t
 t/pod.t
