@@ -23,7 +23,13 @@ WriteMakefile
                            'XML::Twig' => '3.14'
                          },
           'INSTALLDIRS' => 'site',
-          'EXE_FILES' => [],
+          'EXE_FILES' => [
+                           'scripts/sbs-batch-check.pl',
+                           'scripts/sbs-batch-remove.pl',
+                           'scripts/sbs-batch-submit.pl',
+                           'scripts/sbs-scheduler-print.pl',
+                           'scripts/sbs-scheduler-update.pl'
+                         ],
           'PL_FILES' => {}
         )
 ;

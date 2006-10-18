@@ -56,12 +56,12 @@
          <maxConcurentJob>2</maxConcurentJob>
       </oneQueue>
       <oneQueue>
-         <name>single</name>
+         <name>single.*</name>
          <resource>
             <type>machine</type>
          </resource>
          <priority>5</priority>
-         <maxConcurentJob>7</maxConcurentJob>
+         <maxConcurentJob>2</maxConcurentJob>
       </oneQueue>
       <oneQueue>
          <name>single_high</name>

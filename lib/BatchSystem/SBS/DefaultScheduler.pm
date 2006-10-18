@@ -378,6 +378,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 			       id=>$id,
 			       command=>$cmd,
 			       queue=>$queue,
+			       title=>$hprms{title},
 			       dir=>$dir,
 			       on_finished=>$hprms{on_finished},
 			       status=>'PENDING',
@@ -843,6 +844,17 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $queues=$self->__queues;
     my @tmp=sort {__scheduling_sort_priorityfifo_cmp($a, $b, $queues)} @$in_pendingJobs;
     my %cptQJob;
+    #count how many job are in each queues;
+    my $rscStatus=$self->__resourcesStatus();
+    my $hjl=$self->__joblist();
+    foreach my $ht (values %$rscStatus){
+	foreach my $htn(values %$ht){
+	  if(defined $htn->{job_id}){
+	    my $jid=$htn->{job_id};
+	    $cptQJob{$hjl->{$jid}{queue}}++;
+	}
+      }
+    }
     my @idx;
 #    my @remaining;
     my $i=0;
@@ -1110,11 +1122,11 @@ sub toString{
   $ret.="\n\n" if $ret;
   unless($hprms{skip_joblist}){
     unless($hprms{skip_header}){
-      $ret.="#Joblist\n#id\tstatus\tqueue\tresource\tdir\tcommand\n";
+      $ret.="#Joblist\n#id\tstatus\tqueue\tresource\ttitle\tdir\tcommand\n";
     }
     my $hjl=$self->__joblist();
     foreach (sort {$b <=> $a} keys %$hjl) {
-      $ret.="$hjl->{$_}{id}\t$hjl->{$_}{status}\t$hjl->{$_}{queue}\t".($hjl->{$_}{resource} or '')."\t$hjl->{$_}{dir}\t".basename($hjl->{$_}{command})."\n";
+      $ret.="$hjl->{$_}{id}\t$hjl->{$_}{status}\t$hjl->{$_}{queue}\t".($hjl->{$_}{resource} or '')."\t".($hjl->{$_}{title} or '')."\t$hjl->{$_}{dir}\t".basename($hjl->{$_}{command} || '!!!')."\n";
     }
   }
 

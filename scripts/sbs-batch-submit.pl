@@ -5,11 +5,12 @@ use BatchSystem::SBS::ScriptsCommon;
 BatchSystem::SBS::ScriptsCommon::init();
 
 use Getopt::Long;
-my(@command, $chainCommands, $queue);
+my(@command, $chainCommands, $queue, $title);
 if (!GetOptions(
 		"command=s"=>\@command,
 		"chain"=>\$chainCommands,
 		"queue=s"=>\$queue,
+		"title=s"=>\$title,
 	       )
    ){
   die;
@@ -20,10 +21,10 @@ my @ids;
 foreach(@command){
   my $id;
   if ($chainCommands && @ids){
-    $id=$sbs->job_submit(command=>$_, queue=>$queue, on_finished=>$ids[-1]);
+    $id=$sbs->job_submit(command=>$_, queue=>$queue, title=>$title, on_finished=>$ids[-1]);
     print STDERR "chaining [$ids[-1]](on_finished)->[$id]\n";
   }else{
-    $id=$sbs->job_submit(command=>$_, queue=>$queue);
+    $id=$sbs->job_submit(command=>$_, queue=>$queue, title=>$title);
   }
   push @ids, $id;
 }

@@ -2,6 +2,22 @@ use strict;
 use warnings;
 use Module::Build;
 
+
+my @scripts;
+open (fd, "<MANIFEST") or die "cannot open MANIFEST: $!";
+while(<fd>){
+  chomp;
+  push @scripts, $_ if /^(scripts)\//;
+}
+
+my %cgi_scripts;
+open (fd, "<MANIFEST") or die "cannot open MANIFEST: $!";
+while(<fd>){
+  chomp;
+  $cgi_scripts{$_}=$_ if /^(cgi)\//;
+}
+
+
 my $builder = Module::Build->new(
     module_name         => 'BatchSystem::SBS',
     license             => 'lgpl',
@@ -29,7 +45,11 @@ my $builder = Module::Build->new(
 		 'Util::Properties'=>0,
 		 'XML::Twig'=>'3.14',
     },
+    script_files=>\@scripts,
+    cgi_files=>\%cgi_scripts,
+    install_path => { cgi =>"blib/cgi/" },
     add_to_cleanup      => [ 'BatchSystem-SBS-*' ],
 );
 
+$builder->add_build_element('cgi');
 $builder->create_build_script();
