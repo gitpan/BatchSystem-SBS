@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 
-use Test::More tests => 16;
+use Test::More tests => 17;
 use File::Basename;
 use File::Temp qw(tempdir);
 
@@ -22,8 +22,12 @@ ok($sbs->scheduler->joblist_index($jli_fname), "setting scheduler joblist index 
 
 my $rsi_fname="$tmpdir/resources.dump";
 ok($sbs->scheduler->resourcesStatus_index($rsi_fname), "setting scheduler resources index to $rsi_fname");
-
 $sbs->scheduler->resourcesStatus_init();
+
+my $qsi_fname="$tmpdir/queuesstatus.dump";
+ok($sbs->scheduler->queuesStatus_index($qsi_fname), "setting scheduler queuesStatus index to $rsi_fname");
+$sbs->scheduler->queuesStatus_init();
+
 
 my $n=10;
 for (1..$n){

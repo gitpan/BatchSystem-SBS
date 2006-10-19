@@ -5,6 +5,7 @@
     <schedulingMethod>fifo</schedulingMethod>
     <joblistIndex>/tmp/to/be/defined/joblist.dump</joblistIndex>
     <resourcesIndex>/tmp/to/be/defined/resourceslist.dump</resourcesIndex>
+    <queuesIndex>/tmp/to/be/defined/queuesstatuseslist.dump</queuesIndex>
     <resourcesList>
       <oneResource type="cluster">
         <name>subcluster_A</name>

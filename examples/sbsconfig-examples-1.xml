@@ -8,6 +8,8 @@
     <joblistIndex>/tmp/SBS-demo/joblist.dump</joblistIndex>
     <!-- hard dump of resources status -->
     <resourcesIndex>/tmp/SBS-demo/resourceslist.dump</resourcesIndex>
+    <!-- hard dump of resources status -->
+    <queuesIndex>/tmp/SBS-demo/queueslist.dump</queuesIndex>
     <!-- states if an update (scheduling of the next available job is to done after a job ends -->
     <autoupdate>yes</autoupdate>
     <resourcesList>
@@ -69,7 +71,7 @@
             <type>machine</type>
          </resource>
          <priority>10</priority>
-         <maxConcurentJob>1</maxConcurentJob>
+         <maxConcurentJob>10</maxConcurentJob>
       </oneQueue>
       <oneQueue>
          <name>cluster_default</name>

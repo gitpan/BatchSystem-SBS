@@ -90,5 +90,6 @@ sub init{
   $sbs->workingDir($workingDir) if $workingDir;
   $sbs->scheduler->__joblist_pump();
   $sbs->scheduler->resourcesStatus_init();
+  $sbs->scheduler->queuesStatus_init();
 }
 1;
