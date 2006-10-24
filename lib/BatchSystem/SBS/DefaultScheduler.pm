@@ -577,10 +577,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $id=$hprms{id};
     my $script=$hprms{script} or die "no script argument to __job_execute_scriptmorfer";
     die "[$script] is not a fil" unless -f $script;
-    local $/;
-    open (FD, "<$script") or die "cannot open for reading [$script]";
-    my $contents=<FD>;
-    close FD;
+    my $contents;
+    {
+      local $/;
+      open (FD, "<$script") or die "cannot open for reading [$script]";
+      $contents=<FD>;
+      close FD;
+    }
 
     $contents=~s/\$\{jobid\}/$id/gi;
     my $job=$self->__joblist->{$id};
@@ -599,7 +602,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       while (<FH>){
 	chomp;
 	s/#.*//;
-      next unless /\S/;
+        next unless /\S/;
 	$nbnodes++;
       }
       close FH;
@@ -891,7 +894,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       if(($itmp==$#tmp) || ((defined $curQPrio) && ($curQPrio ne $queues->{$q}{priority}))){
 	#add the last element if we are at the last element
 	if($itmp==$#tmp ){
-	  unless($queues->{$q}->{maxConcurentJob} && $cptQJob{$q}>$queues->{$q}->{maxConcurentJob}){
+	  unless($queues->{$q}->{maxConcurentJob} && ($cptQJob{$q}||0)>$queues->{$q}->{maxConcurentJob}){
 	    push @{$curQlist{$q}}, $tmp[$itmp];
 	  }
 	  undef $curQPrio;

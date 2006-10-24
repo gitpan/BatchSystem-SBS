@@ -173,7 +173,7 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
   use Object::InsideOut 'Exporter';
 
   BEGIN{
-    our $VERSION = '0.05';
+    our $VERSION = '0.06';
     our @EXPORT = qw( &getUserList &getCGIUser );
     our @EXPORT_OK = ();
   }

@@ -51,5 +51,7 @@ my $builder = Module::Build->new(
     add_to_cleanup      => [ 'BatchSystem-SBS-*' ],
 );
 
-$builder->add_build_element('cgi');
-$builder->create_build_script();
+$builder->add_build_element('cgi') || die "cannot add build element [cgi]";
+$builder->prereq_failures() && $builder->prereq_failures()->{requires}  && die "conflicts (missing requirem\ents?)";
+$builder->create_build_script;
+
