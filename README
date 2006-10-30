@@ -82,6 +82,11 @@ METHODS
    $sbs->job_remove(id=>job_id);
     Remove the job from the list, the scheduler, kill processes
 
+   $sbs->job_action(id=>job_id, action=>ACTION);
+    Send an action to a job. ACTION can be of
+
+    'KILL': to kill (kill the process if running) one job
+
    $sbs->job_infoStr(id=>job_id);
     Returns a string (or undef if no job exist) with the job info
 

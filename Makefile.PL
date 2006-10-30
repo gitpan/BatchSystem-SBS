@@ -17,6 +17,7 @@ WriteMakefile
                            'IO::All' => '0',
                            'List::Util' => '0',
                            'LockFile::Simple' => '0',
+                           'Log::StdLog' => '0',
                            'Object::InsideOut' => '0',
                            'Test::More' => '0',
                            'Util::Properties' => '0',

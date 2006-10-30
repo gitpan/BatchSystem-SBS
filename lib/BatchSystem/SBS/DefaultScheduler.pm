@@ -55,6 +55,18 @@ Remove the job #jobid from the list (maybe kill its processe if running
 
 Send a signal to a running job
 
+=head3 $scheduler->job_action(id=>val, action=>ACTION)
+
+Send an action to a registered job.
+
+ACTION can be of
+
+=over 4
+
+=item KILL kill the processe or just take the joib out of the queue is it is PENDING
+
+=back
+
 =head3 $scheduler->job_info(id=>val);
 
 returns a hash ref to all the info on the job
@@ -289,7 +301,7 @@ our $__serializer=Data::Serializer->new(
 				      serializer => 'Storable',
 				     );
 
-our $FINISHED_JOB_STATUS=qr/^(COMPLETED|EXIT|ERROR)$/i;
+our $FINISHED_JOB_STATUS=qr/^(COMPLETED|EXIT|KILLED|ERROR)$/i;
 our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
 {
@@ -415,7 +427,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     $self->job_signal(id=>$id, signal=>'KILL');
     if($job->{resource}){
       $self->__resourcesStatus_pump(nolock=>1);
+      $self->__queuesStatus_pump(nolock=>1);
+
       $self->__queue_remove(job=>$job);
+      $self->__queuesstatus_touch(queue=>$job->{queue});
+      $job->{status}='KILLED';
+
+      $self->__queuesStatus_dump(nolock=>1);
       $self->__resourcesStatus_dump(nolock=>1);
     }
     delete $self->__joblist()->{$id};
@@ -424,10 +442,42 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     return $self;
   }
 
+  sub job_action{
+    my $self=shift;
+    my %hprms=@_;
+    my $action=$hprms{action} || die "no signal argument to job_action";
+    my $id=$hprms{id};
+    die "no id argument to job_action" unless defined $id;
+    $self->__lockdata();
+    $self->__joblist_pump(nolock=>1);
+    if($action eq 'KILL'){
+      if ($self->__joblist->{$id}{status}=~$FINISHED_JOB_STATUS) {
+	#nothing to be done
+	warn "not anymore possible to KILL batch [$id] with status [".$self->__joblist->{$id}{status}."]";
+      }else{
+	warn "killing batch [$id]\n";
+	my $job=$self->__joblist()->{$id};
+	$self->job_signal(id=>$id, signal=>'KILL');
+	if($job->{resource}){
+	  $self->__resourcesStatus_pump(nolock=>1);
+	  $self->__queue_remove(job=>$job, jobstatus=>'KILLED');
+	  $self->__resourcesStatus_dump(nolock=>1);
+	}
+	$job->{status}='KILLED';
+      }
+    }else{
+      $self->__joblist_dump(nolock=>1);
+      $self->__unlockdata();
+      die "no action registered for [$action]";
+    }
+    $self->__joblist_dump(nolock=>1);
+    $self->__unlockdata();
+
+  }
   sub job_signal(){
     my $self=shift;
     my %hprms=@_;
-    my $signal=$hprms{signal} || die "no signal argument to job_submit";
+    my $signal=$hprms{signal} || die "no signal argument to job_signal";
     my $id=$hprms{id};
     die "no id argument to job_signal" unless defined $id;
 

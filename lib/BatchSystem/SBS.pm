@@ -100,6 +100,16 @@ Returns a jobid
 
 Remove the job from the list, the scheduler, kill processes
 
+=head3 $sbs->job_action(id=>job_id, action=>ACTION);
+
+Send an action to a job. ACTION can be of
+
+=over 4
+
+=item 'KILL': to kill (kill the process if running) one job
+
+=back
+
 =head3 $sbs->job_infoStr(id=>job_id);
 
 Returns a string (or undef if no job exist) with the job info
@@ -166,6 +176,7 @@ use LockFile::Simple;
 use File::Basename;
 use File::Copy;
 use IO::All;
+use Log::StdLog;
 use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
@@ -173,7 +184,7 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
   use Object::InsideOut 'Exporter';
 
   BEGIN{
-    our $VERSION = '0.06';
+    our $VERSION = '0.07';
     our @EXPORT = qw( &getUserList &getCGIUser );
     our @EXPORT_OK = ();
   }
@@ -182,7 +193,7 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
   my @scheduler :Field(Accessor => 'scheduler');
   my @workingDir :Field(Accessor => 'workingDir');
 
-
+  our $FHLog;
   my %init_args :InitArgs = (
 			    );
   sub _init :Init{
@@ -226,6 +237,16 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
     $self->scheduler->job_remove(id=>$jid);
     my $dir=$self->jobs_dir()."/$jid";
     rmtree $dir or die "cannot remove directory [$dir]: $!";
+  }
+
+  sub job_action{
+    my $self=shift;
+    my %hprms=@_;
+    my $action=$hprms{action} || die "no signal argument to job_action";
+    my $jid=$hprms{id} ;
+    die "no id argument to job_action" unless defined $jid;
+
+    $self->scheduler->job_action(id=>$jid, action=>$action);
   }
 
   sub job_infoStr{
@@ -291,6 +312,21 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
       foreach (qw(name workingDir)) {
 	my $el=$rootel->first_child($_) or die "must set a /$_ element in xml config file";
 	$self->$_($el->text);
+      }
+      if(my $el=$rootel->first_child('logging')){
+	my $fname=$el->first_child('file')->text if $el->first_child('file');
+	if($fname){
+	  unless(open($FHLog, ">>$fname")){
+	    die "cannot open log file for appending [$fname]: $!";
+	  }
+	}else{
+	  $FHLog=\*STDERR;
+	}
+	my $level=$el->first_child('level')?$el->first_child('level')->text:'warn';
+	Log::StdLog->import({level=>$level, handle=>$FHLog});
+	
+      }else{
+	Log::StdLog->import({level=>'warn', handle=>\*STDERR});
       }
       my $el=$rootel->first_child("Scheduler") or die "no children /Scheduler";
       my $schedulerType=$el->atts->{type} or die "Scheduler node has not attribute type";

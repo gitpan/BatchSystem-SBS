@@ -1,6 +1,10 @@
 <SBSConfig>
   <name>SBS demo #1</name>
   <workingDir>/tmp/SBS-demo</workingDir>
+  <logging>
+     <file>/tmp/SBS-demo/sbs-demo.log</file>
+     <level>info</level>
+  </logging>
   <Scheduler type="SBS::DefaultScheduler">
     <!-- the ordering method to return which job is the next one -->
     <schedulingMethod>prioritylimit</schedulingMethod>

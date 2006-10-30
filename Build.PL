@@ -42,6 +42,7 @@ my $builder = Module::Build->new(
 		 'IO::All'=>0,
 		 'List::Util'=>0,
 		 'LockFile::Simple'=>0,
+		 'Log::StdLog'=>0,
 		 'Util::Properties'=>0,
 		 'XML::Twig'=>'3.14',
     },

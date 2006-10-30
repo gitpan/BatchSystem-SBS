@@ -22,11 +22,11 @@ foreach(@command){
   my $id;
   if ($chainCommands && @ids){
     $id=$sbs->job_submit(command=>$_, queue=>$queue, title=>$title, on_finished=>$ids[-1]);
-    print STDERR "chaining [$ids[-1]](on_finished)->[$id]\n";
+    print {*BatchSystem::SBS::STDLOG} info=> "chaining [$ids[-1]](on_finished)->[$id]";
   }else{
     $id=$sbs->job_submit(command=>$_, queue=>$queue, title=>$title);
   }
   push @ids, $id;
 }
 $sbs->scheduler->scheduling_update();
-print STDERR "submited job(s) [@ids]\n";
+print {*BatchSystem::SBS::STDLOG} info=> "submited job(s) [@ids]\n";
