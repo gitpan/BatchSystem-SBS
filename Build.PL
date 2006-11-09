@@ -40,6 +40,7 @@ my $builder = Module::Build->new(
 		 'File::Temp'=>0,
 		 'Getopt::Long'=>0,
 		 'IO::All'=>0,
+		 'JSON'=>0,
 		 'List::Util'=>0,
 		 'LockFile::Simple'=>0,
 		 'Log::StdLog'=>0,

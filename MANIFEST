@@ -10,10 +10,12 @@ examples/olavdev-cluster.mach
 examples/README.txt
 examples/sbsconfig-examples-1.xml
 examples/vs-cluster.mach
+cgi/cgiSBS-info.pl
 lib/BatchSystem/SBS.pm
 lib/BatchSystem/SBS/Common.pm
 lib/BatchSystem/SBS/DefaultScheduler.pm
 lib/BatchSystem/SBS/ScriptsCommon.pm
+scripts/sbs-batch-action.pl
 scripts/sbs-batch-check.pl
 scripts/sbs-batch-remove.pl
 scripts/sbs-batch-submit.pl

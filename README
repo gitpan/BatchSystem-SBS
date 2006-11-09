@@ -1,7 +1,7 @@
 NAME
     BatchSystem::SBS - a Simple Batch System
 
-DESCRIPTIONESCRIPTION
+DESCRIPTION
     A light, file based batch system.
 
 SYNOPSIS
@@ -105,6 +105,9 @@ METHODS
    $sbs->readConfig(file=>file.xml)
     Read its config from an xml file (see examples/ dir)
 
+   $sbs->dataRequest(request=>'req1,req2...')
+    request data (rpc oriented)
+
 AUTHOR
     Alexandre Masselot, "<alexandre.masselot@genebio.com>"
 
@@ -117,7 +120,7 @@ BUGS
 
 ACKNOWLEDGEMENTS
 COPYRIGHT & LICENSE
-    Copyright (C) 2004-2006 Geneva Bioinformatics (www.genebio.com) &
+    Copyright (C) 2004-2007 Geneva Bioinformatics (www.genebio.com) &
     Jacques Colinge (Upper Austria University of Applied Science at
     Hagenberg)
 

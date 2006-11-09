@@ -234,6 +234,10 @@ just a call to $scheduler->toString()
 
 Returns a string with the status for the different components
 
+=head3 $scheduler->dataRequest(request=>'req1,req2...')
+
+request data (rpc oriented)
+
 =head1 AUTHOR
 
 Alexandre Masselot, C<< <alexandre.masselot@genebio.com> >>
@@ -298,8 +302,8 @@ my @__scheduling_method :Field(Accessor => '__scheduling_method', Permission => 
 my @__scheduling_methodName :Field(Accessor => '__scheduling_methodName', Permission => 'private');
 
 our $__serializer=Data::Serializer->new(
-				      serializer => 'Storable',
-				     );
+					serializer => 'Storable',
+				       );
 
 our $FINISHED_JOB_STATUS=qr/^(COMPLETED|EXIT|KILLED|ERROR)$/i;
 our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
@@ -419,13 +423,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
-    unless(exists $self->__joblist()->{$id}){
+    unless (exists $self->__joblist()->{$id}) {
       carp "CANNOT REMOVE job [$id]: does not exist";
       return $self;
     }
     my $job=$self->__joblist()->{$id};
     $self->job_signal(id=>$id, signal=>'KILL');
-    if($job->{resource}){
+    if ($job->{resource}) {
       $self->__resourcesStatus_pump(nolock=>1);
       $self->__queuesStatus_pump(nolock=>1);
 
@@ -450,22 +454,22 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     die "no id argument to job_action" unless defined $id;
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
-    if($action eq 'KILL'){
+    if ($action eq 'KILL') {
       if ($self->__joblist->{$id}{status}=~$FINISHED_JOB_STATUS) {
 	#nothing to be done
 	warn "not anymore possible to KILL batch [$id] with status [".$self->__joblist->{$id}{status}."]";
-      }else{
+      } else {
 	warn "killing batch [$id]\n";
 	my $job=$self->__joblist()->{$id};
 	$self->job_signal(id=>$id, signal=>'KILL');
-	if($job->{resource}){
+	if ($job->{resource}) {
 	  $self->__resourcesStatus_pump(nolock=>1);
 	  $self->__queue_remove(job=>$job, jobstatus=>'KILLED');
 	  $self->__resourcesStatus_dump(nolock=>1);
 	}
 	$job->{status}='KILLED';
       }
-    }else{
+    } else {
       $self->__joblist_dump(nolock=>1);
       $self->__unlockdata();
       die "no action registered for [$action]";
@@ -482,7 +486,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     die "no id argument to job_signal" unless defined $id;
 
     my $pids=$self->job_properties(id=>$id)->prop_get('pids');
-    if($pids && $pids=~/\S/){
+    if ($pids && $pids=~/\S/) {
       print STDERR "job [$id] kill $signal $pids\n";
       kill $signal, split /\s+/, $pids;
     }
@@ -534,10 +538,10 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
     my $cmd;
     my $isScript;
-    if(-f $job->{command}){
+    if (-f $job->{command}) {
       $cmd=$self->__job_execute_scriptmorfer(id=>$id, script=>$job->{command});
       $cmd="sh $cmd" unless -x $cmd;
-    }else{
+    } else {
       $cmd=$job->{command};
     }
     my $prop=$self->job_properties(id=>$id);
@@ -572,12 +576,12 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	$pids.=$pid;
 	$prop->prop_set('pids', $pids);
 	
-#	if($self->__autoupdate()){
-#	  waitpid($pid, 0);
-#	  $self->scheduling_update;
-#	}
+	#	if($self->__autoupdate()){
+	#	  waitpid($pid, 0);
+	#	  $self->scheduling_update;
+	#	}
       } elsif (defined $pid) {
-	if(system $cmd){
+	if (system $cmd) {
 	  $self->__lockdata();
 	  $self->__joblist_pump(nolock=>1);
 	  $self->__resourcesStatus_pump(nolock=>1);
@@ -593,7 +597,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	  $self->__unlockdata();
 
 	  $self->scheduling_update if $self->__autoupdate();
-	}else{
+	} else {
 	  $self->__lockdata();
 	  $self->__joblist_pump(nolock=>1);
 	  $self->__resourcesStatus_pump(nolock=>1);
@@ -647,9 +651,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     $contents=~s/\$\{host\}/$host/gi;
 
     my $nbnodes=0;
-    if($mfile){
+    if ($mfile) {
       open (FH, "<$mfile") or die "cannot open machinefile $mfile: $!";
-      while (<FH>){
+      while (<FH>) {
 	chomp;
 	s/#.*//;
         next unless /\S/;
@@ -679,35 +683,35 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my %hprms=@_;
     $self->__lockdata();
-    if($hprms{reset}){
+    if ($hprms{reset}) {
       $self->__resourcesStatus({});
-    }else{
+    } else {
       $self->__resourcesStatus_pump(nolock=>1);
     }
     my $rsc=$self->__resources();
     my $rscStatus=$self->__resourcesStatus();
     #check for not existing resource status entries
-    while (my($t, $ht)=each %$rsc){
-      while (my($n, $htn)=each %$ht){
-	if(exists $rscStatus->{$t}{$n}){
+    while (my($t, $ht)=each %$rsc) {
+      while (my($n, $htn)=each %$ht) {
+	if (exists $rscStatus->{$t}{$n}) {
 	  $rscStatus->{$t}{$n}{__VISITED__}=1;
-	}else{
+	} else {
 	  $rscStatus->{$t}{$n}={
-			      type=>$t,
-			      name=>$n,
-			      status=>'AVAIL',
-			      job_id=>undef,
-			      __VISITED__=>1,
-			     }
+				type=>$t,
+				name=>$n,
+				status=>'AVAIL',
+				job_id=>undef,
+				__VISITED__=>1,
+			       }
 	}
       }
     }
     #check for  existing resource status entries  ont corresponding to a resource entry
-    while (my($t, $ht)=each %$rscStatus){
-      while (my($n, $htn)=each %$ht){
-	if(exists $htn->{__VISITED__}){
+    while (my($t, $ht)=each %$rscStatus) {
+      while (my($n, $htn)=each %$ht) {
+	if (exists $htn->{__VISITED__}) {
 	  delete $htn->{__VISITED__};
-	}else{
+	} else {
 	  delete $rscStatus->{$t}{$n};
 	}
       }
@@ -724,27 +728,27 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     $self->__joblist_pump(nolock=>1);
     $self->__resourcesStatus_pump(nolock=>1);
     my $rscStatus=$self->__resourcesStatus();
-    foreach my $t (sort keys %$rscStatus){
+    foreach my $t (sort keys %$rscStatus) {
       my $ht=$rscStatus->{$t};
-      foreach my $n( sort keys %$ht){
+      foreach my $n ( sort keys %$ht) {
 	my $htn=$ht->{$n};
 	my $jid=$htn->{job_id};
-	if(defined $jid){
-	  if (! exists $self->__joblist()->{$jid}){
+	if (defined $jid) {
+	  if (! exists $self->__joblist()->{$jid}) {
 	    print STDERR "WARNING! resource [$n] is attributed to job [$jid], but this job does not exist anymore\n(releasing resource)\n";
 	    undef $htn->{job_id};
 	    $htn->{status}='AVAIL';
-	  }elsif ($self->__joblist()->{$jid}{status}!~$RUNNING_JOB_STATUS){
+	  } elsif ($self->__joblist()->{$jid}{status}!~$RUNNING_JOB_STATUS) {
 	    print STDERR "WARNING! resource [$n] is attributed to job [$jid], but this job status is [".$self->__joblist()->{$jid}{status}."]\n(releasing resource)\n";
 	    undef $htn->{job_id};
 	    $htn->{status}='AVAIL';
-	    if($self->__joblist()->{$jid}{status} eq 'READY'){
+	    if ($self->__joblist()->{$jid}{status} eq 'READY') {
 	      $self->__joblist()->{$jid}{status}='PENDING';
 	    }
-	  }else{
+	  } else {
 	    #job has a runn status
 	    my $pids=$self->job_properties(id=>$jid)->prop_get('pids');
-	    if($pids=~/\S/){
+	    if ($pids=~/\S/) {
 	      my $cmdps="ps --no-headers $pids";
 	      unless (`$cmdps`=~/\S/){
 		print STDERR "WARNING! resource [$n] is attributed to job [$jid], supposing to run pids [$pids] while $cmdps returns nothing\n(releasing resource)\n";
@@ -767,12 +771,12 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   ########################## scheduling
 
   my %schedulingSortSub=(
-		     fifo=>sub {$_[0]->__scheduling_sort_fifo($_[1])},
-		     lifo=>sub {$_[0]->__scheduling_sort_lifo($_[1])},
-		     random=>sub {$_[0]->__scheduling_sort_random($_[1])},
-		     priorityfifo=>sub {$_[0]->__scheduling_sort_priorityfifo($_[1])},
-		     prioritylimit=>sub {$_[0]->__scheduling_sort_prioritylimit($_[1])},
-		     );
+			 fifo=>sub {$_[0]->__scheduling_sort_fifo($_[1])},
+			 lifo=>sub {$_[0]->__scheduling_sort_lifo($_[1])},
+			 random=>sub {$_[0]->__scheduling_sort_random($_[1])},
+			 priorityfifo=>sub {$_[0]->__scheduling_sort_priorityfifo($_[1])},
+			 prioritylimit=>sub {$_[0]->__scheduling_sort_prioritylimit($_[1])},
+			);
 
   sub scheduling_methodList{
     return sort keys %schedulingSortSub;
@@ -782,7 +786,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my $set=$_[0];
     my $val=shift;
-    if($set){
+    if ($set) {
       die "no schedulingSub for method name [$val]: possible are:(".join('|', scheduling_methodList()).")" unless $schedulingSortSub{$val};
       $self->__scheduling_method($schedulingSortSub{$val});
       $self->__scheduling_methodName($val);
@@ -794,7 +798,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub scheduling_update{
     my $self=shift;
     my @readids=$self->scheduling_next_reserve();
-    foreach (@readids){
+    foreach (@readids) {
       $self->job_execute(id=>$_);
     }
   }
@@ -810,16 +814,16 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my @sortedjobs=$self->__scheduling_method()->($self, $pendingJobs);
     my $nbAvailResources=scalar(@$availResources);
     my @submited;
-    foreach my $job (@sortedjobs){
+    foreach my $job (@sortedjobs) {
       my $qname=$job->{queue};
-      foreach my $rsc (@$availResources){
+      foreach my $rsc (@$availResources) {
 	next unless $rsc->{status}=~/^(AVAIL)$/;
-	if($self->__queue_validResource($qname, $rsc)){
+	if ($self->__queue_validResource($qname, $rsc)) {
 	  $self->__queue_insert(queue=>$qname, job=>$job, resourceStatus=>$rsc);
 	  $nbAvailResources--;
 	  push @submited, $job->{id};
 	  last;
-	}else{
+	} else {
 	}
       }
       last unless $nbAvailResources;
@@ -909,9 +913,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my ($ja, $jb, $queues)=@_;
     my $prio_a=$queues->{$ja->{queue}}->{priority};
     my $prio_b=$queues->{$jb->{queue}}->{priority};
-    if ($prio_a eq $prio_b){
+    if ($prio_a eq $prio_b) {
       return $ja->{id} <=> $jb->{id};
-    }else{
+    } else {
       return $prio_b <=> $prio_a;
     }
   }
@@ -925,9 +929,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my %cptQJob;
     my $rscStatus=$self->__resourcesStatus();
     my $hjl=$self->__joblist();
-    foreach my $ht (values %$rscStatus){
-      foreach my $htn(values %$ht){
-	if(defined $htn->{job_id}){
+    foreach my $ht (values %$rscStatus) {
+      foreach my $htn (values %$ht) {
+	if (defined $htn->{job_id}) {
 	  my $jid=$htn->{job_id};
 	  $cptQJob{$hjl->{$jid}{queue}}++;
 	}
@@ -939,12 +943,12 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my %curQlist;
     my $qstatus=$self->__queuesStatus();
     my @ret;
-    foreach my $itmp(0..$#tmp){
+    foreach my $itmp (0..$#tmp) {
       my $q=$tmp[$itmp]->{queue};
-      if(($itmp==$#tmp) || ((defined $curQPrio) && ($curQPrio ne $queues->{$q}{priority}))){
+      if (($itmp==$#tmp) || ((defined $curQPrio) && ($curQPrio ne $queues->{$q}{priority}))) {
 	#add the last element if we are at the last element
-	if($itmp==$#tmp ){
-	  unless($queues->{$q}->{maxConcurentJob} && ($cptQJob{$q}||0)>$queues->{$q}->{maxConcurentJob}){
+	if ($itmp==$#tmp ) {
+	  unless ($queues->{$q}->{maxConcurentJob} && ($cptQJob{$q}||0)>$queues->{$q}->{maxConcurentJob}) {
 	    push @{$curQlist{$q}}, $tmp[$itmp];
 	  }
 	  undef $curQPrio;
@@ -952,13 +956,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
 	#then we have a ring of queue in @curQPrio;
 	my @curRing=sort {$qstatus->{$a}{accesstime} <=> $qstatus->{$b}{accesstime}} keys %curQlist;
-	while (@curRing){
+	while (@curRing) {
 	  my $q=shift @curRing;
 	  my $j=shift @{$curQlist{$q}};
 	  push @ret, $j;
-	  unless(scalar @{$curQlist{$q}}){
+	  unless (scalar @{$curQlist{$q}}) {
 	    delete $curQlist{$q};
-	  }else{
+	  } else {
 	    #push back the queue at the other end of the ring if the list is not empty
 	    push @curRing, $q;
 	  }
@@ -980,15 +984,15 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub __queues_exist{
     my $self=shift;
     my $qname=shift;
-    if( exists $self->__queues()->{$qname}){
+    if ( exists $self->__queues()->{$qname}) {
       return 1;
-    }else{
+    } else {
       my $hqor=$self->__queues_orig;
-      foreach my $oq(keys  %$hqor){
+      foreach my $oq (keys  %$hqor) {
 	my $oqre=$hqor->{$oq};
-	if($qname =~ $oqre){
+	if ($qname =~ $oqre) {
 	  my %q;
-	  foreach my $k (keys %{$self->__queues->{$oq}}){
+	  foreach my $k (keys %{$self->__queues->{$oq}}) {
 	    my $v=$self->__queues->{$oq}{$k};
 	    $q{$k}=$v;
 	  }
@@ -1005,13 +1009,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my $qname=shift;
     my $res=shift;
-    unless($self->__queues->{$qname}{resource}{properties}){
+    unless ($self->__queues->{$qname}{resource}{properties}) {
       return $self->__queues->{$qname}{resource}{type} eq $res->{type};
     }
     my $qp=$self->__queues->{$qname}{resource}{properties};
     return 0 unless exists $self->__resources->{$res->{type}}{$res->{name}}{properties};
     my $rp=$self->__resources->{$res->{type}}{$res->{name}}{properties};
-    foreach (keys %$qp){
+    foreach (keys %$qp) {
       return 0 unless exists $rp->{$_};
       return 0 unless $rp->{$_} eq $qp->{$_};
     }
@@ -1052,9 +1056,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my %hprms=@_;
     $self->__lockdata();
-    if($hprms{reset}){
+    if ($hprms{reset}) {
       $self->__queuesStatus({});
-    }else{
+    } else {
       $self->__queuesStatus_pump(nolock=>1);
     }
     $self->__unlockdata();
@@ -1086,16 +1090,16 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       $el=$rootel->first_child('queuesIndex') or die "must set a /queuesesIndex element in xml config file";
       $self->queuesStatus_index($el->text);
 
-      if($el=$rootel->first_child('autoupdate')){
+      if ($el=$rootel->first_child('autoupdate')) {
 	my $str=$el->text;
-	if($str=~/^y(es)?$/i){
+	if ($str=~/^y(es)?$/i) {
 	  $self->__autoupdate(1);
-	}elsif($str=~/^n(o)?$/i){
+	} elsif ($str=~/^n(o)?$/i) {
 	  $self->__autoupdate(0);
-	}else{
+	} else {
 	  $self->__autoupdate($str);
 	}
-      }else{
+      } else {
 	$self->__autoupdate(1);
       }
 
@@ -1104,7 +1108,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	my $type=$el->atts->{type} or die "no type attribute to [resourcesList/oneResource]";
 	my $name=$el->first_child('name') && $el->first_child('name')->text or die "no name field for resource";
 	my $properties;
-	foreach ($el->get_xpath('property')){
+	foreach ($el->get_xpath('property')) {
 	  $properties->{$_->atts->{name}}=$_->text;
 	}
 	die "duplicate resource name [$name] for type [$type]" if exists $rsc{$type} && exists $rsc{$type}{$name};
@@ -1136,12 +1140,12 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	die "duplicate queue name [$name]" if exists $q{$name};
 	my $priority=$el->first_child('priority') && $el->first_child('priority')->text or die "no priority field for oneQueue (name=$name)";
 	my %qrsc;
-	foreach ($el->first_child('resource')->children){
+	foreach ($el->first_child('resource')->children) {
 	  next if $_->gi eq 'property';
 	  $qrsc{$_->gi}=$_->text;
 	}
 	my $properties;
-	foreach ($el->get_xpath('resource/property')){
+	foreach ($el->get_xpath('resource/property')) {
 	  $properties->{$_->atts->{name}}=$_->text;
 	}
 	$qrsc{properties}=$properties if $properties;
@@ -1151,7 +1155,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 		   resource=>\%qrsc,
 		   name_orig=>$name,
 		  };
-	if($el->first_child('maxConcurentJob')){
+	if ($el->first_child('maxConcurentJob')) {
 	  $q{$name}{maxConcurentJob}=$el->first_child('maxConcurentJob')->text+0;
 	}
 	$self->__queues_orig->{$name}=qr/^$name$/;
@@ -1161,111 +1165,183 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     }
     die "neither [file=>] nor [twigelt=>] arg was passed to readConfig";
   }
-}
+  use overload '""' => sub{return $_[0]->toString};
 
-use overload '""' => sub{return $_[0]->toString};
+  sub toString{
+    my $self=shift;
+    my %hprms=@_;
 
-sub toString{
-  my $self=shift;
-  my %hprms=@_;
+    my $ret="";
 
-  my $ret="";
-
-  unless($hprms{skip_generic}){
-    $ret.="scheduling method=".$self->scheduling_method()."\n";
-    $ret.="autoupdate=".($self->__autoupdate()?"yes":"no")."\n";
-  }
-  $ret.="\n\n" if $ret;
-  unless($hprms{skip_resources}){
-    unless($hprms{skip_header}){
-      $ret.="#Resources\n#type\tname\tdescr\tproperties\n";
+    unless ($hprms{skip_generic}) {
+      $ret.="scheduling method=".$self->scheduling_method()."\n";
+      $ret.="autoupdate=".($self->__autoupdate()?"yes":"no")."\n";
     }
-    my $rsc=$self->__resources();
-    foreach my $t (sort keys %$rsc){
-      my $ht=$rsc->{$t};
-      foreach my $n(sort keys %$ht){
-	my $htn=$ht->{$n};
-	$ret.="$t\t$n\t".($htn->{machineFile} or $htn->{host});
-	if($htn->{properties}){
+    $ret.="\n\n" if $ret;
+    unless ($hprms{skip_resources}) {
+      unless ($hprms{skip_header}) {
+	$ret.="#Resources\n#type\tname\tdescr\tproperties\n";
+      }
+      my $rsc=$self->__resources();
+      foreach my $t (sort keys %$rsc) {
+	my $ht=$rsc->{$t};
+	foreach my $n (sort keys %$ht) {
+	  my $htn=$ht->{$n};
+	  $ret.="$t\t$n\t".($htn->{machineFile} or $htn->{host});
+	  if ($htn->{properties}) {
+	    $ret.="\t";
+	    foreach (sort keys %{$htn->{properties}}) {
+	      $ret.="($_=$htn->{properties}{$_})";
+	    }
+	  }
+	  $ret.="\n";
+	}
+      }
+    }
+
+    $ret.="\n\n" if $ret;
+    unless ($hprms{skip_resourcesStatus}) {
+      unless ($hprms{skip_header}) {
+	$ret.="#ResourcesStatus\n#type\tname\tstatus\tjob_id\n";
+      }
+      my $rscStatus=$self->__resourcesStatus();
+      foreach my $t (sort keys %$rscStatus) {
+	my $ht=$rscStatus->{$t};
+	foreach my $n ( sort keys %$ht) {
+	  my $htn=$ht->{$n};
+	  $ret.="$t\t$n\t$htn->{status}\t".((defined $htn->{job_id})?$htn->{job_id}:'')."\n";
+	}
+      }
+    }
+
+    $ret.="\n\n" if $ret;
+    unless ($hprms{skip_queues}) {
+      unless ($hprms{skip_header}) {
+	$ret.="#Queues\n#name\tpriority\tresource\tproperties\n";
+      }
+      my $q=$self->__queues();
+      foreach my $n (sort keys %{$self->__queues_orig}) {
+	my $hn=$q->{$n};
+	$ret.="$n\t$hn->{priority}\t";
+	my $i;
+	foreach my $k (sort keys %{$hn->{resource}}) {
+	  next if $k eq 'properties';
+	  my $v=$hn->{resource}{$k};
+	  $ret.= ";" if $i;
+	  $i=1;
+	  $ret.="$k=$v";
+	}
+	if ($hn->{resource}{properties}) {
 	  $ret.="\t";
-	  foreach (sort keys %{$htn->{properties}}){
-	    $ret.="($_=$htn->{properties}{$_})";
+	  foreach (sort keys %{$hn->{resource}{properties}}) {
+	    $ret.="($_=$hn->{resource}{properties}{$_})";
 	  }
 	}
 	$ret.="\n";
       }
     }
-  }
 
-  $ret.="\n\n" if $ret;
-  unless($hprms{skip_resourcesStatus}){
-    unless($hprms{skip_header}){
-      $ret.="#ResourcesStatus\n#type\tname\tstatus\tjob_id\n";
-    }
-    my $rscStatus=$self->__resourcesStatus();
-    foreach my $t (sort keys %$rscStatus){
-      my $ht=$rscStatus->{$t};
-      foreach my $n( sort keys %$ht){
-	my $htn=$ht->{$n};
-	$ret.="$t\t$n\t$htn->{status}\t".((defined $htn->{job_id})?$htn->{job_id}:'')."\n";
+    $ret.="\n\n" if $ret;
+    unless ($hprms{skip_queuesStatus}) {
+      unless ($hprms{skip_header}) {
+	$ret.="#QueuesStatus\n#name\taccesstime\n";
+      }
+      my $q=$self->__queuesStatus();
+      foreach my $n (sort keys %$q) {
+	my $hn=$self->__queuesStatus->{$n};
+	$ret.="$n\t".($hn->{accesstime}||'__NOTIME__');
+	$ret.="\n";
       }
     }
+
+
+
+    $ret.="\n\n" if $ret;
+    unless ($hprms{skip_joblist}) {
+      unless ($hprms{skip_header}) {
+	$ret.="#Joblist\n#id\tstatus\tqueue\tresource\ttitle\tdir\tcommand\n";
+      }
+      my $hjl=$self->__joblist();
+      foreach (sort {$b <=> $a} keys %$hjl) {
+	$ret.="$hjl->{$_}{id}\t$hjl->{$_}{status}\t$hjl->{$_}{queue}\t".($hjl->{$_}{resource} or '')."\t".($hjl->{$_}{title} or '')."\t$hjl->{$_}{dir}\t".basename($hjl->{$_}{command} || '!!!')."\n";
+      }
+    }
+
+    return $ret;
   }
 
-  $ret.="\n\n" if $ret;
-  unless($hprms{skip_queues}){
-    unless($hprms{skip_header}){
-      $ret.="#Queues\n#name\tpriority\tresource\tproperties\n";
-    }
-    my $q=$self->__queues();
-    foreach my $n (sort keys %{$self->__queues_orig}){
-      my $hn=$q->{$n};
-      $ret.="$n\t$hn->{priority}\t";
-      my $i;
-      foreach my $k(sort keys %{$hn->{resource}}){
-	next if $k eq 'properties';
-	my $v=$hn->{resource}{$k};
-	$ret.= ";" if $i;
-	$i=1;
-	$ret.="$k=$v";
+  ############################ string info & command
+  sub dataRequest{
+    my $self=shift;
+    my %hprms=@_;
+    my $requests=$hprms{request} or die "must provide a [request] argument";
+    my %reth;
+    foreach (split /,/, $requests) {
+      if (/^joblist$/i) {
+	$reth{joblist}=$self->__joblist();
+	next;
       }
-      if($hn->{resource}{properties}){
-	$ret.="\t";
-	foreach (sort keys %{$hn->{resource}{properties}}){
-	  $ret.="($_=$hn->{resource}{properties}{$_})";
+      if (/^resources$/i) {
+	$reth{resources}=$self->__resources();
+	next;
+      }
+      if (/^resourcesstatus$/i) {
+	$reth{resourcesstatus}=$self->__resourcesStatus();
+	next;
+      }
+      if (/^queues$/i) {
+	$reth{queues}=$self->__queues();
+	next;
+      }
+      if (/^queuesstatus$/i) {
+	my %h;
+	my $qs=$self->__queuesStatus();
+	foreach (keys %$qs){
+	  if(ref($qs->{$_}) eq 'HASH'){
+	    my %hh=%{$qs->{$_}};
+	    $h{$_}=\%hh;
+	    $hh{accesstime}=localtime($hh{accesstime}) if exists $hh{accesstime};
+	  }else{
+	    $h{$_}=$qs->{$_};
+	  }
 	}
+	$reth{queuesstatus}=\%h;
+	next;
       }
-      $ret.="\n";
+      if (s/^joblist\b//i) {
+	unless($_){
+	  $reth{joblist}=$self->__joblist();
+	}else{
+	  my $hideCompleted=/\bhidecompleted\b/i;
+	  my $hideFinished=/\bhidefinished\b/i;
+	  my $displayLast=$1 if /\bdisplaylast=(\d+)/;
+	  my %h=%{$self->__joblist()};
+	  if($hideFinished){
+	    foreach (keys %h){
+	      delete $h{$_} if $h{$_}{status}=~$FINISHED_JOB_STATUS;
+	    }
+	  }elsif($hideCompleted){
+	    foreach (keys %h){
+	      delete $h{$_} if $h{$_}{status}=~/COMPLETED/;
+	    }
+	  }
+
+	  if($displayLast){
+	    my @idx=sort {$b<=>$a} keys %h;
+	    if ($displayLast<scalar(@idx)){
+	      delete $h{$idx[$_]} foreach($displayLast..$#idx);
+	    }
+	  }
+	  $reth{joblist}=\%h;
+	}
+	next;
+      }
+      die "unknown request [$_]";
     }
+    return \%reth;
+
   }
-
-  $ret.="\n\n" if $ret;
-  unless($hprms{skip_queuesStatus}){
-    unless($hprms{skip_header}){
-      $ret.="#QueuesStatus\n#name\taccesstime\n";
-    }
-    my $q=$self->__queuesStatus();
-    foreach my $n (sort keys %$q){
-      my $hn=$self->__queuesStatus->{$n};
-      $ret.="$n\t".($hn->{accesstime}||'__NOTIME__');
-      $ret.="\n";
-    }
-  }
-
-
-
-  $ret.="\n\n" if $ret;
-  unless($hprms{skip_joblist}){
-    unless($hprms{skip_header}){
-      $ret.="#Joblist\n#id\tstatus\tqueue\tresource\ttitle\tdir\tcommand\n";
-    }
-    my $hjl=$self->__joblist();
-    foreach (sort {$b <=> $a} keys %$hjl) {
-      $ret.="$hjl->{$_}{id}\t$hjl->{$_}{status}\t$hjl->{$_}{queue}\t".($hjl->{$_}{resource} or '')."\t".($hjl->{$_}{title} or '')."\t$hjl->{$_}{dir}\t".basename($hjl->{$_}{command} || '!!!')."\n";
-    }
-  }
-
-  return $ret;
 }
+
 
 1; # End of BatchSystem::SBS

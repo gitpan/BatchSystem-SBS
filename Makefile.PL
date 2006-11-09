@@ -15,6 +15,7 @@ WriteMakefile
                            'File::Temp' => '0',
                            'Getopt::Long' => '0',
                            'IO::All' => '0',
+                           'JSON' => '0',
                            'List::Util' => '0',
                            'LockFile::Simple' => '0',
                            'Log::StdLog' => '0',
@@ -25,6 +26,7 @@ WriteMakefile
                          },
           'INSTALLDIRS' => 'site',
           'EXE_FILES' => [
+                           'scripts/sbs-batch-action.pl',
                            'scripts/sbs-batch-check.pl',
                            'scripts/sbs-batch-remove.pl',
                            'scripts/sbs-batch-submit.pl',

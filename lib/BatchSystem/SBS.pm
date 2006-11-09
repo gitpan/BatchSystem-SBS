@@ -6,7 +6,7 @@ use strict;
 
 BatchSystem::SBS - a Simple Batch System
 
-=head1 DESCRIPTIONESCRIPTION
+=head1 DESCRIPTION
 
 A light, file based batch system.
 
@@ -134,6 +134,10 @@ Returns an n x 4 array (each row contains jobid, queuename, scripts)
 
 Read its config from an xml file (see examples/ dir)
 
+=head3 $sbs->dataRequest(request=>'req1,req2...')
+
+request data (rpc oriented)
+
 =head1 AUTHOR
 
 Alexandre Masselot, C<< <alexandre.masselot@genebio.com> >>
@@ -150,7 +154,7 @@ your bug as I make changes.
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright (C) 2004-2006  Geneva Bioinformatics (www.genebio.com) & Jacques Colinge (Upper Austria University of Applied Science at Hagenberg)
+Copyright (C) 2004-2007  Geneva Bioinformatics (www.genebio.com) & Jacques Colinge (Upper Austria University of Applied Science at Hagenberg)
 
 This library is free software; you can redistribute it and/or
 modify it under the terms of the GNU Lesser General Public
@@ -184,12 +188,13 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
   use Object::InsideOut 'Exporter';
 
   BEGIN{
-    our $VERSION = '0.07';
+    our $VERSION = '0.08';
     our @EXPORT = qw( &getUserList &getCGIUser );
     our @EXPORT_OK = ();
   }
 
   my @name :Field(Accessor => 'name' );
+  my @_configFile :Field(Accessor => '_configFile' );
   my @scheduler :Field(Accessor => 'scheduler');
   my @workingDir :Field(Accessor => 'workingDir');
 
@@ -294,7 +299,7 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
     unlockFile("$f") || die "can't unlock [$f]: $!\n";
     return $i;
   }
-  
+
 
   ########################## I/O
 
@@ -306,6 +311,7 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
     if ($hprms{file}) {
       my $twig=XML::Twig->new();
       $twig->parsefile($hprms{file}) or die "cannot xml parse file $hprms{file}: $!";
+      $self->_configFile($hprms{file});
       return $self->readConfig(twigelt=>$twig->root);
     }
     if (my $rootel=$hprms{twigelt}) {
@@ -341,5 +347,19 @@ use BatchSystem::SBS::Common qw(lockFile unlockFile);
     die "neither [file=>] nor [twigelt=>] arg was passed to readConfig";
   }
 
+  sub dataRequest{
+    my $self=shift;
+    my %hprms=@_;
+    my $requests=$hprms{request} or die "must provide a [request] argument";
+    my %reth;
+    foreach (split /,/, $requests) {
+      if (/^configfile$/i) {
+	$reth{configfile}=$self->_configFile();
+	next;
+      }
+      die "unknown request [$_]";
+    }
+    return \%reth;
+  }
 }
 1; # End of BatchSystem::SBS
