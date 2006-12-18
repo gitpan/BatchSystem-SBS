@@ -134,9 +134,9 @@ Returns an n x 4 array (each row contains jobid, queuename, scripts)
 
 Read its config from an xml file (see examples/ dir)
 
-=head3 $sbs->dataRequest(request=>'req1,req2...')
+=head3 $sbs->dataRequest()
 
-request data (rpc oriented)
+Return info (genre json)
 
 =head1 AUTHOR
 
@@ -184,14 +184,11 @@ use Log::StdLog;
 use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
-{
-  use Object::InsideOut 'Exporter';
 
-  BEGIN{
-    our $VERSION = '0.08';
-    our @EXPORT = qw( &getUserList &getCGIUser );
-    our @EXPORT_OK = ();
-  }
+our $VERSION="0.09";
+
+{
+  use Object::InsideOut;
 
   my @name :Field(Accessor => 'name' );
   my @_configFile :Field(Accessor => '_configFile' );

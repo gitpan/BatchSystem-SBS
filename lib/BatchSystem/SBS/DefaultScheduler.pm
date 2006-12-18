@@ -234,9 +234,9 @@ just a call to $scheduler->toString()
 
 Returns a string with the status for the different components
 
-=head3 $scheduler->dataRequest(request=>'req1,req2...')
+=head3 $scheduler->dataRequest()
 
-request data (rpc oriented)
+Return info (genre json)
 
 =head1 AUTHOR
 
@@ -309,11 +309,7 @@ our $FINISHED_JOB_STATUS=qr/^(COMPLETED|EXIT|KILLED|ERROR)$/i;
 our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
 {
-  use Object::InsideOut 'Exporter';
-  BEGIN{
-    our @EXPORT = qw();
-    our @EXPORT_OK = ();
-  }
+  use Object::InsideOut;
   my %init_args :InitArgs = (
 			    );
   sub _init :Init{

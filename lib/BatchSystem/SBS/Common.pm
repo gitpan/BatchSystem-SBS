@@ -67,7 +67,6 @@ our @ISA=qw(Exporter);
 our @EXPORT_OK=qw(&lockFile &unlockFile);
 
 our $simpleLocker;
-use LockFile::Simple;
 
 eval{
   require File::Flock;
