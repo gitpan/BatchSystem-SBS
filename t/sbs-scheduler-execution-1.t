@@ -35,7 +35,7 @@ for (1..$n){
 
 is($sbs->scheduler->joblist_size, $n, "$n job in the list");
 
-is($sbs->job_info(id=>0)->{status}, 'PENDING', "job 0 is PENDING");
+is($sbs->job_info(id=>1)->{status}, 'PENDING', "job 1 is PENDING");
 
 my @readids=$sbs->scheduler->scheduling_next_reserve();
 

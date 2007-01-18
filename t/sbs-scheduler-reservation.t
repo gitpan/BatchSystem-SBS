@@ -36,23 +36,23 @@ for (1..$n){
 
 is($sbs->scheduler->joblist_size, $n, "$n job in the list");
 
-is($sbs->job_info(id=>0)->{status}, 'PENDING', "job 0 is PENDING");
+is($sbs->job_info(id=>1)->{status}, 'PENDING', "job 1 is PENDING");
 
 $sbs->scheduler->scheduling_next_reserve();
-is($sbs->job_info(id=>0)->{status}, 'READY', "job 0 is READY");
 is($sbs->job_info(id=>1)->{status}, 'READY', "job 1 is READY");
-is($sbs->job_info(id=>3)->{status}, 'PENDING', "job 3 is PENDING");
+is($sbs->job_info(id=>2)->{status}, 'READY', "job 2 is READY");
+is($sbs->job_info(id=>4)->{status}, 'PENDING', "job 4 is PENDING");
 
 
-$sbs->job_remove(id=>0);
-$sbs->job_remove(id=>2);
-$sbs->job_remove(id=>7);
+$sbs->job_remove(id=>1);
+$sbs->job_remove(id=>3);
+$sbs->job_remove(id=>8);
 is($sbs->scheduler->joblist_size, $n-3, "3 job removed job remains in the list");
-ok(! defined $sbs->job_infoStr(id=>0), "job 0 does not exist anymore");
-ok(! defined $sbs->job_infoStr(id=>2), "job 2 does not exist anymore");
-ok(! defined $sbs->job_infoStr(id=>7), "job 7 does not exist anymore");
+ok(! defined $sbs->job_infoStr(id=>1), "job 1 does not exist anymore");
+ok(! defined $sbs->job_infoStr(id=>3), "job 3 does not exist anymore");
+ok(! defined $sbs->job_infoStr(id=>8), "job 8 does not exist anymore");
 
 $sbs->scheduler->scheduling_next_reserve();
-is($sbs->job_info(id=>3)->{status}, 'READY', "job 3 is READY");
+is($sbs->job_info(id=>4)->{status}, 'READY', "job 4 is READY");
 
 #rint STDERR $sbs->scheduler;

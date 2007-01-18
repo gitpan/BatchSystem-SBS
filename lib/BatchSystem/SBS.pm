@@ -185,7 +185,7 @@ use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
 
-our $VERSION="0.09";
+our $VERSION="0.10";
 
 {
   use Object::InsideOut;
@@ -266,7 +266,7 @@ our $VERSION="0.09";
   sub jobs_dir{
     my $self=shift;
     my %hprms=@_;
-    my $d=$self->workingDir()."/jobs";
+    my $d=$self->workingDir()."/list";
     mkdir($d) or die "cannot mkdir($d)" unless -d $d;
     if($hprms{clean}){
       rmtree($d) || die "cannot rmtree($d): $!";
@@ -282,9 +282,9 @@ our $VERSION="0.09";
     my $f=$self->workingDir()."/jobs-id.txt";
     unless (-f $f){
       open (FD, ">$f") or die "canot open for writing [$f]: $!";
-      print FD "0";
+      print FD "1";
       close FD;
-      return "0";
+      return "1";
     }
     lockFile("$f") || die "can't lock [$f]: $!\n"; 
    my $i=IO::All::io($f)->slurp;
