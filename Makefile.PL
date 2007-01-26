@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile
 (
           'NAME' => 'BatchSystem::SBS',
-          'VERSION_FROM' => 'lib/BatchSystem/SBS.pm',
+          'VERSION_FROM' => './lib/BatchSystem/SBS.pm',
           'PREREQ_PM' => {
                            'Cwd' => '0',
                            'Data::Serializer' => '0',

@@ -185,7 +185,7 @@ use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
 
-our $VERSION="0.10";
+our $VERSION="0.23";
 
 {
   use Object::InsideOut;
@@ -213,7 +213,10 @@ our $VERSION="0.10";
     my $queue=$hprms{queue} || die "no queue argument to job_submit";
 
     my $jid=$self->__jobs_newid();
+    print {*STDLOG} info => "new batch job id [$jid]\n";
     my $dir=$self->jobs_dir()."/$jid";
+    print {*STDLOG} info => "job id [$jid]: directory [$dir]\n";
+
     die "directory [$dir] already exists" if -d $dir;
     mkdir $dir or die "cannot mkdir($dir): $!";
     if(-f $cmd){
@@ -221,6 +224,7 @@ our $VERSION="0.10";
       copy($cmd, $tmp) or die "cannot copy($cmd, $tmp): $!";
       $cmd=$tmp;
     }
+    print {*STDLOG} info => "job id [$jid]: submiting command: $cmd\n";
     $self->scheduler->job_submit(id=>$jid,
 				 queue=>$queue,
 				 dir=>$dir,
@@ -228,6 +232,7 @@ our $VERSION="0.10";
 				 title=>$hprms{title},
 				 on_finished=>$hprms{on_finished},
 				);
+    print {*STDLOG} info => "job id [$jid]: submited OK\n";
     return $jid;
   }
 
@@ -329,7 +334,7 @@ our $VERSION="0.10";
 	Log::StdLog->import({level=>$level, handle=>$FHLog});
 	
       }else{
-	Log::StdLog->import({level=>'warn', handle=>\*STDERR});
+	#Log::StdLog->import({level=>'warn', handle=>\*STDERR});
       }
       my $el=$rootel->first_child("Scheduler") or die "no children /Scheduler";
       my $schedulerType=$el->atts->{type} or die "Scheduler node has not attribute type";

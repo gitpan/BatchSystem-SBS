@@ -280,13 +280,15 @@ use List::Util qw(first max maxstr min minstr reduce shuffle sum);;
 use Util::Properties;
 use POSIX ":sys_wait_h";
 use Errno qw(EAGAIN);
+use Log::StdLog;
 
+our $FHLOG_SCHEDULER;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
 my @__joblist :Field(Accessor => '__joblist', 'Type' => 'Hash', Permission => 'private');
 my @__resources :Field(Accessor => '__resources', 'Type' => 'Hash', Permission => 'private');
 my @__resourcesStatus :Field(Accessor => '__resourcesStatus', 'Type' => 'Hash', Permission => 'private');
-my @__queues :Field(Accessor => '__queues', 'Type' => 'Hash', Permission => 'private');
+my @__queues :Field(Accessor => '__queues', 'Type' => 'Hash', Permission => 'public');
 my @__queuesStatus :Field(Accessor => '__queuesStatus', 'Type' => 'Hash', Permission => 'private');
 #the list of queue names that where declared at start (check for regular exepression);
 my @__queues_orig :Field(Accessor => '__queues_orig', 'Type' => 'HASH', Permission => 'private');
@@ -371,13 +373,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub __lockdata{
     my $self=shift;
     my %hprms=@_;
-    my $f=dirname($self->joblist_index())."data.locker";
+    my $f=dirname($self->joblist_index())."/data.locker";
     lockFile($f) or confess "cannot lock $f: $!";
   }
   sub __unlockdata{
     my $self=shift;
     my %hprms=@_;
-    my $f=dirname($self->joblist_index())."data.locker";
+    my $f=dirname($self->joblist_index())."/data.locker";
     unlockFile($f) or confess "cannot lock $f: $!";
   }
 
@@ -394,6 +396,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     die "directoy for job ($id) [$dir] does not exist" unless -d $dir;
     die "queue [$queue] doe not exist " unless $self->__queues_exist($queue);
 
+    print {*STDLOG} info => "job id [$id]: DefaultScheduler submiting to queue [$queue]\n";
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
     carp "CANNOT ADD job [$id]: already exist" if exists $self->__joblist()->{$id};
@@ -465,7 +468,11 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	}
 	$job->{status}='KILLED';
       }
-    } else {
+    } elsif($action=~/^STATUS:(\w+)$/){
+      my $st=$1;
+      print {*STDLOG} info => "job id [$id]: change status to [$st]\n";
+      $self->__joblist->{$id}{status}=$st;
+    }else {
       $self->__joblist_dump(nolock=>1);
       $self->__unlockdata();
       die "no action registered for [$action]";
@@ -529,6 +536,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my %hprms=@_;
     die "no id argument to job_execute" unless defined $hprms{id};
     my $id=$hprms{id};
+    print {*STDLOG} info => "job id [$id]: DefaultScheduler executing\n";
     my $job=$self->__joblist->{$id} or die "no job defined for if [$id]";
     my $dir=$job->{dir};
 
@@ -540,6 +548,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     } else {
       $cmd=$job->{command};
     }
+    print {*STDLOG} info => "job id [$id]: DefaultScheduler command [$cmd]\n";
     my $prop=$self->job_properties(id=>$id);
     my $date=CORE::localtime(time);
     $prop->prop_set('start.time', $date);
@@ -549,6 +558,8 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
     my $queueName=$job->{queue}or die "cannot __job_execute_scriptmorfer on a job ($id) with no attributed queue";
     my $queue=$self->__queues->{$queueName};
+    print {*STDLOG} info => "job id [$id]: DefaultScheduler queue [$queueName]\n";
+
     my $rtype=$queue->{resource}{type};
     my $mfile=$self->__resources->{$rtype}{$job->{resource}}{machineFile};
     my $host=$self->__resources->{$rtype}{$job->{resource}}{host};
@@ -562,7 +573,10 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	$self->__joblist_pump(nolock=>1);
 	$self->__queuesStatus_pump(nolock=>1);
 	my $job=$self->__joblist->{$id};
-	$job->{status}='RUNNING';
+	unless($self->__joblist->{$id}{status}=~$FINISHED_JOB_STATUS){
+	  $job->{status}='RUNNING';
+	}
+	print {*STDLOG} info => "job id [$id]: status RUNNING\n";
 	$self->__queuesstatus_touch(queue=>$job->{queue});
 	$self->__queuesStatus_dump(nolock=>1);
 	$self->__joblist_dump(nolock=>1);
@@ -571,7 +585,8 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	$pids.=" " if $pids;
 	$pids.=$pid;
 	$prop->prop_set('pids', $pids);
-	
+	print {*STDLOG} info => "job id [$id]: DefaultScheduler running with pid [$pid]\n";
+
 	#	if($self->__autoupdate()){
 	#	  waitpid($pid, 0);
 	#	  $self->scheduling_update;
@@ -585,6 +600,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
 	  my $job=$self->__joblist->{$id};
 	  $self->__queue_remove(job=>$job, jobstatus=>'ERROR');
+	  print {*STDLOG} info => "job id [$id]: status ERROR\n";
 	  $self->__queuesstatus_touch(queue=>$job->{queue});
 
 	  $self->__queuesStatus_dump(nolock=>1);
@@ -601,6 +617,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
 	  my $job=$self->__joblist->{$id};
 	  $self->__queue_remove(job=>$job, jobstatus=>'COMPLETED');
+	  print {*STDLOG} info => "job id [$id]: status COMPLETED\n";
 	  $self->__queuesstatus_touch(queue=>$job->{queue});
 
 	  $self->__queuesStatus_dump(nolock=>1);
@@ -999,8 +1016,6 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     }
     return 0;
   }
-
-
   sub __queue_validResource{
     my $self=shift;
     my $qname=shift;
@@ -1017,6 +1032,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     }
     return 1;
   }
+
 
   sub __queue_insert{
     my $self=shift;
@@ -1077,6 +1093,21 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       return $self->readConfig(twigelt=>$twig->root);
     }
     if (my $rootel=$hprms{twigelt}) {
+      if(my $el=$rootel->first_child('logging')){
+	  my $fname=$el->first_child('file')->text if $el->first_child('file');
+	  if ($fname) {
+	    unless(open($FHLOG_SCHEDULER, ">>$fname")){
+	      die "cannot open log file for appending [$fname]: $!";
+	    }
+	  } else {
+	    $FHLOG_SCHEDULER=\*STDERR;
+	  }
+	  my $level=$el->first_child('level')?$el->first_child('level')->text:'warn';
+	  Log::StdLog->import({level=>$level, handle=>$FHLOG_SCHEDULER});
+      }else{
+	#Log::StdLog->import({level=>'warn', handle=>\*STDERR});
+      }
+
       my $el=$rootel->first_child('schedulingMethod') or die "must set a /schedulingMethod element in xml config file";
       $self->scheduling_method($el->text);
       $el=$rootel->first_child('joblistIndex') or die "must set a /joblistIndex element in xml config file";

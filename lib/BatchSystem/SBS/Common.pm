@@ -87,7 +87,7 @@ sub lockFile{
   if($simpleLocker){
     return $simpleLocker->trylock($f) or die "cannot lock [$f]: $!";
   }else{
-    File::Flock::lock("$f.lck") or die "cannot lock ($f): $!";
+    File::Flock::lock("$f.flck") or die "cannot lock ($f): $!";
   }
 }
 
@@ -96,7 +96,7 @@ sub unlockFile{
   if($simpleLocker){
     return $simpleLocker->unlock($f) or die "cannot lock [$f]: $!";
   }else{
-    File::Flock::unlock("$f.lck") or die "cannot lock ($f): $!";
+    File::Flock::unlock("$f.flck") or die "cannot lock ($f): $!";
   }
 }
 
