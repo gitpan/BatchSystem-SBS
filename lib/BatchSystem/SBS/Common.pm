@@ -1,6 +1,7 @@
 package BatchSystem::SBS::Common;
 use warnings;
 use strict;
+use English;
 require Exporter;
 
 =head1 NAME
@@ -69,11 +70,12 @@ our @EXPORT_OK=qw(&lockFile &unlockFile);
 our $simpleLocker;
 
 eval{
+  die "no File::Flock under windows " if $OSNAME=~/win/i;
   require File::Flock;
 };
 if($@){
   require LockFile::Simple;
-  warn "$@\nUsing LockFile::Simple";
+  warn "Using LockFile::Simple";
   $simpleLocker=LockFile::Simple->make(-format => '%f.lck',
 				       -max => 20,
 				       -delay => 1,

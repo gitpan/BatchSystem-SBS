@@ -1,6 +1,7 @@
 package BatchSystem::SBS::DefaultScheduler;
 use warnings;
 use strict;
+use English;
 
 =head1 NAME
 
@@ -544,7 +545,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $isScript;
     if (-f $job->{command}) {
       $cmd=$self->__job_execute_scriptmorfer(id=>$id, script=>$job->{command});
-      $cmd="sh $cmd" unless -x $cmd;
+      $cmd="sh $cmd" unless -x $cmd && $OSNAME!~/win/i;
     } else {
       $cmd=$job->{command};
     }

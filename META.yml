@@ -1,6 +1,6 @@
 ---
 name: BatchSystem-SBS
-version: 0.23
+version: 0.26
 author:
   - 'Alexandre Masselot <alexandre.masselot@genebio.com>'
 abstract: a Simple Batch System
@@ -27,7 +27,7 @@ requires:
 provides:
   BatchSystem::SBS:
     file: lib/BatchSystem/SBS.pm
-    version: 0.23
+    version: 0.26
   BatchSystem::SBS::Common:
     file: lib/BatchSystem/SBS/Common.pm
   BatchSystem::SBS::DefaultScheduler:

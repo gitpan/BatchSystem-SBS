@@ -36,7 +36,7 @@ my %requires = (
 		 'XML::Twig'=>'3.14',
     );
 
-unless ($OSNAME=~/win/){
+unless ($OSNAME=~/win/i){
   $requires{'File::Copy'}=0;
 }
 
