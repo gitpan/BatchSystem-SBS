@@ -134,9 +134,9 @@ Returns an n x 4 array (each row contains jobid, queuename, scripts)
 
 Read its config from an xml file (see examples/ dir)
 
-=head3 $sbs->dataRequest()
+=head3 $sbs->dataRequest(request=>'req1,req2...')
 
-Return info (genre json)
+request data (rpc oriented)
 
 =head1 AUTHOR
 
@@ -185,7 +185,7 @@ use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
 
-our $VERSION="0.26";
+our $VERSION="0.29";
 
 {
   use Object::InsideOut;
@@ -209,19 +209,19 @@ our $VERSION="0.26";
   sub job_submit{
     my $self=shift;
     my %hprms=@_;
-    my $cmd=$hprms{command} || $hprms{cmd} || die "no command argument to job_submit";
-    my $queue=$hprms{queue} || die "no queue argument to job_submit";
+    my $cmd=$hprms{command} || $hprms{cmd} || CORE::die "no command argument to job_submit";
+    my $queue=$hprms{queue} || CORE::die "no queue argument to job_submit";
 
     my $jid=$self->__jobs_newid();
     print {*STDLOG} info => "new batch job id [$jid]\n";
     my $dir=$self->jobs_dir()."/$jid";
     print {*STDLOG} info => "job id [$jid]: directory [$dir]\n";
 
-    die "directory [$dir] already exists" if -d $dir;
-    mkdir $dir or die "cannot mkdir($dir): $!";
+    CORE::die "directory [$dir] already exists" if -d $dir;
+    mkdir $dir or CORE::die "cannot mkdir($dir): $!";
     if(-f $cmd){
       my $tmp="$dir/".basename($cmd);
-      copy($cmd, $tmp) or die "cannot copy($cmd, $tmp): $!";
+      copy($cmd, $tmp) or CORE::die "cannot copy($cmd, $tmp): $!";
       $cmd=$tmp;
     }
     print {*STDLOG} info => "job id [$jid]: submiting command: $cmd\n";
@@ -240,18 +240,18 @@ our $VERSION="0.26";
     my $self=shift;
     my %hprms=@_;
     my $jid=$hprms{id} ;
-    die "no id argument to job_remove" unless defined $jid;
+    CORE::die "no id argument to job_remove" unless defined $jid;
     $self->scheduler->job_remove(id=>$jid);
     my $dir=$self->jobs_dir()."/$jid";
-    rmtree $dir or die "cannot remove directory [$dir]: $!";
+    rmtree $dir or CORE::die "cannot remove directory [$dir]: $!";
   }
 
   sub job_action{
     my $self=shift;
     my %hprms=@_;
-    my $action=$hprms{action} || die "no signal argument to job_action";
+    my $action=$hprms{action} || CORE::die "no signal argument to job_action";
     my $jid=$hprms{id} ;
-    die "no id argument to job_action" unless defined $jid;
+    CORE::die "no id argument to job_action" unless defined $jid;
 
     $self->scheduler->job_action(id=>$jid, action=>$action);
   }
@@ -272,10 +272,10 @@ our $VERSION="0.26";
     my $self=shift;
     my %hprms=@_;
     my $d=$self->workingDir()."/list";
-    mkdir($d) or die "cannot mkdir($d)" unless -d $d;
+    mkdir($d) or CORE::die "cannot mkdir($d)" unless -d $d;
     if($hprms{clean}){
-      rmtree($d) || die "cannot rmtree($d): $!";
-      mkdir($d) or die "cannot mkdir($d)" unless -d $d;
+      rmtree($d) || CORE::die "cannot rmtree($d): $!";
+      mkdir($d) or CORE::die "cannot mkdir($d)" unless -d $d;
     }
     return $d;
   }
@@ -286,19 +286,19 @@ our $VERSION="0.26";
     my %hprms=@_;
     my $f=$self->workingDir()."/jobs-id.txt";
     unless (-f $f){
-      open (FD, ">$f") or die "canot open for writing [$f]: $!";
+      open (FD, ">$f") or CORE::die "canot open for writing [$f]: $!";
       print FD "1";
       close FD;
       return "1";
     }
-    lockFile("$f") || die "can't lock [$f]: $!\n"; 
+    lockFile("$f") || CORE::die "can't lock [$f]: $!\n"; 
    my $i=IO::All::io($f)->slurp;
     chomp $i;
     $i++;
-    open (FD, ">$f") or die "canot open for writing [$f]: $!";
+    open (FD, ">$f") or CORE::die "canot open for writing [$f]: $!";
     print FD $i;
     close FD;
-    unlockFile("$f") || die "can't unlock [$f]: $!\n";
+    unlockFile("$f") || CORE::die "can't unlock [$f]: $!\n";
     return $i;
   }
 
@@ -312,18 +312,21 @@ our $VERSION="0.26";
 
     if ($hprms{file}) {
       my $twig=XML::Twig->new();
-      $twig->parsefile($hprms{file}) or die "cannot xml parse file $hprms{file}: $!";
+      CORE::die "SBS config xml file does not exists" unless -f $hprms{file};
+      CORE::die "SBS config xml file is not readable" unless -r $hprms{file};
+      $twig->parsefile($hprms{file}) or CORE::die "cannot xml parse file $hprms{file}: $!";
       $self->_configFile($hprms{file});
       return $self->readConfig(twigelt=>$twig->root);
     }
     if (my $rootel=$hprms{twigelt}) {
       foreach (qw(name workingDir)) {
-	my $el=$rootel->first_child($_) or die "must set a /$_ element in xml config file";
+	my $el=$rootel->first_child($_) or CORE::die "must set a /$_ element in xml config file";
 	$self->$_($el->text);
       }
       if(my $el=$rootel->first_child('logging')){
 	my $fname=$el->first_child('file')->text if $el->first_child('file');
 	if($fname){
+    mkdir dirname $fname unless -d dirname $fname;
 	  unless(open($FHLog, ">>$fname")){
 	    die "cannot open log file for appending [$fname]: $!";
 	  }
@@ -336,30 +339,30 @@ our $VERSION="0.26";
       }else{
 	#Log::StdLog->import({level=>'warn', handle=>\*STDERR});
       }
-      my $el=$rootel->first_child("Scheduler") or die "no children /Scheduler";
-      my $schedulerType=$el->atts->{type} or die "Scheduler node has not attribute type";
+      my $el=$rootel->first_child("Scheduler") or CORE::die "no children /Scheduler";
+      my $schedulerType=$el->atts->{type} or CORE::die "Scheduler node has not attribute type";
       if($schedulerType eq 'SBS::DefaultScheduler'){
 	$self->scheduler(BatchSystem::SBS::DefaultScheduler->new());
 	$self->scheduler()->readConfig(twigelt=>$el);
       }else{
-	die "scheduler type=[$schedulerType] is not available";
+	CORE::die "scheduler type=[$schedulerType] is not available";
       }
       return $self;
     }
-    die "neither [file=>] nor [twigelt=>] arg was passed to readConfig";
+    CORE::die "neither [file=>] nor [twigelt=>] arg was passed to readConfig";
   }
 
   sub dataRequest{
     my $self=shift;
     my %hprms=@_;
-    my $requests=$hprms{request} or die "must provide a [request] argument";
+    my $requests=$hprms{request} or CORE::die "must provide a [request] argument";
     my %reth;
     foreach (split /,/, $requests) {
       if (/^configfile$/i) {
 	$reth{configfile}=$self->_configFile();
 	next;
       }
-      die "unknown request [$_]";
+      CORE::die "unknown request [$_]";
     }
     return \%reth;
   }

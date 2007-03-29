@@ -18,26 +18,28 @@ while(<fd>){
 }
 
 my %requires = (
-		 'Cwd'=>0,
 		 'Data::Serializer'=>0,
 		 'IO::All' => 0,
 		 'Object::InsideOut' => 0,
-		 'Test::More' => 0,
-		 'File::Basename'=>0,
 		 'File::Flock'=>0,
-		 'File::Path'=>0,
-		 'File::Spec'=>0,
-		 'File::Temp'=>0,
 		 'Getopt::Long'=>0,
 		 'IO::All'=>0,
-		 'List::Util'=>0,
+		 'JSON'=>0,
+		 'LockFile::Simple'=>0,
 		 'Log::StdLog'=>0,
 		 'Util::Properties'=>0,
 		 'XML::Twig'=>'3.14',
     );
 
 unless ($OSNAME=~/win/i){
+  $requires{'Test::More'}=0;
+  $requires{'File::Basename'}=0;
+  $requires{'File::Path'}=0;
+  $requires{'File::Spec'}=0;
+  $requires{'File::Temp'}=0;
   $requires{'File::Copy'}=0;
+  $requires{'List::Util'}=0;
+  $requires{'Cwd'}=0;
 }
 
 my $builder = Module::Build->new(

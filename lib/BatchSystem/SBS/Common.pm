@@ -1,8 +1,8 @@
 package BatchSystem::SBS::Common;
 use warnings;
 use strict;
-use English;
 require Exporter;
+use English;
 
 =head1 NAME
 
@@ -70,12 +70,11 @@ our @EXPORT_OK=qw(&lockFile &unlockFile);
 our $simpleLocker;
 
 eval{
-  die "no File::Flock under windows " if $OSNAME=~/win/i;
   require File::Flock;
 };
 if($@){
   require LockFile::Simple;
-  warn "Using LockFile::Simple";
+  warn "$@\nUsing LockFile::Simple";
   $simpleLocker=LockFile::Simple->make(-format => '%f.lck',
 				       -max => 20,
 				       -delay => 1,
@@ -85,20 +84,20 @@ if($@){
 }
 
 sub lockFile{
-  my $f=shift or die "must pass an argument to lockFile";
+  my $f=shift or CORE::die  "must pass an argument to lockFile";
   if($simpleLocker){
-    return $simpleLocker->trylock($f) or die "cannot lock [$f]: $!";
+    return $simpleLocker->trylock($f) or CORE::die  "cannot lock [$f]: $!";
   }else{
-    File::Flock::lock("$f.flck") or die "cannot lock ($f): $!";
+    File::Flock::lock("$f.flck", $OSNAME=~'shared') or CORE::die  "cannot lock ($f): $!";
   }
 }
 
 sub unlockFile{
-  my $f=shift or die "must pass an argument to lockFile";
+  my $f=shift or CORE::die  "must pass an argument to lockFile";
   if($simpleLocker){
-    return $simpleLocker->unlock($f) or die "cannot lock [$f]: $!";
+    return $simpleLocker->unlock($f) or CORE::die  "cannot lock [$f]: $!";
   }else{
-    File::Flock::unlock("$f.flck") or die "cannot lock ($f): $!";
+    File::Flock::unlock("$f.flck") or CORE::die  "cannot lock ($f): $!";
   }
 }
 

@@ -105,8 +105,8 @@ METHODS
    $sbs->readConfig(file=>file.xml)
     Read its config from an xml file (see examples/ dir)
 
-   $sbs->dataRequest()
-    Return info (genre json)
+   $sbs->dataRequest(request=>'req1,req2...')
+    request data (rpc oriented)
 
 AUTHOR
     Alexandre Masselot, "<alexandre.masselot@genebio.com>"

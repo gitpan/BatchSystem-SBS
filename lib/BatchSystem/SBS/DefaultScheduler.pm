@@ -235,9 +235,9 @@ just a call to $scheduler->toString()
 
 Returns a string with the status for the different components
 
-=head3 $scheduler->dataRequest()
+=head3 $scheduler->dataRequest(request=>'req1,req2...')
 
-Return info (genre json)
+request data (rpc oriented)
 
 =head1 AUTHOR
 
@@ -340,7 +340,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	$self->__lockdata unless $nolock;
 	my $meth1="__".$topic;
 	my $meth2=$topic."_index";
-	$__serializer->store($self->$meth1(), $self->$meth2()) or die "dying trying to store __$topic: $!";
+	$__serializer->store($self->$meth1(), $self->$meth2()) or CORE::die "dying trying to store __$topic: $!";
 	$self->__unlockdata unless $nolock;
 	return $self;
 
@@ -358,7 +358,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	my $f=$self->$meth2();
 
 	if (-f $f) {
-	  my $a=$__serializer->retrieve($f) or die "dying trying to retrieve __$topic: $!";
+	  my $a=$__serializer->retrieve($f) or CORE::die "dying trying to retrieve __$topic in [$f]: $!";
 	  $self->$meth1($a);
 	} else {
 	  $self->$meth1({});
@@ -389,13 +389,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub job_submit{
     my $self=shift;
     my %hprms=@_;
-    my $cmd=$hprms{command} || $hprms{cmd} || die "no command argument to job_submit";
-    my $dir=$hprms{dir} || die "no dir argument to job_submit";
-    my $queue=$hprms{queue} || die "no queue argument to job_submit";
+    my $cmd=$hprms{command} || $hprms{cmd} || CORE::die "no command argument to job_submit";
+    my $dir=$hprms{dir} || CORE::die "no dir argument to job_submit";
+    my $queue=$hprms{queue} || CORE::die "no queue argument to job_submit";
     my $id=$hprms{id};
-    die "no id argument to job_submit" unless defined $id;
-    die "directoy for job ($id) [$dir] does not exist" unless -d $dir;
-    die "queue [$queue] doe not exist " unless $self->__queues_exist($queue);
+    CORE::die "no id argument to job_submit" unless defined $id;
+    CORE::die "directoy for job ($id) [$dir] does not exist" unless -d $dir;
+    CORE::die "queue [$queue] doe not exist " unless $self->__queues_exist($queue);
 
     print {*STDLOG} info => "job id [$id]: DefaultScheduler submiting to queue [$queue]\n";
     $self->__lockdata();
@@ -419,7 +419,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my %hprms=@_;
     my $id=$hprms{id};
-    die "no id argument to job_submit" unless defined $id;
+    CORE::die "no id argument to job_submit" unless defined $id;
 
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
@@ -449,9 +449,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub job_action{
     my $self=shift;
     my %hprms=@_;
-    my $action=$hprms{action} || die "no signal argument to job_action";
+    my $action=$hprms{action} || CORE::die "no signal argument to job_action";
     my $id=$hprms{id};
-    die "no id argument to job_action" unless defined $id;
+    CORE::die "no id argument to job_action" unless defined $id;
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
     if ($action eq 'KILL') {
@@ -476,7 +476,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     }else {
       $self->__joblist_dump(nolock=>1);
       $self->__unlockdata();
-      die "no action registered for [$action]";
+      CORE::die "no action registered for [$action]";
     }
     $self->__joblist_dump(nolock=>1);
     $self->__unlockdata();
@@ -485,9 +485,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub job_signal(){
     my $self=shift;
     my %hprms=@_;
-    my $signal=$hprms{signal} || die "no signal argument to job_signal";
+    my $signal=$hprms{signal} || CORE::die "no signal argument to job_signal";
     my $id=$hprms{id};
-    die "no id argument to job_signal" unless defined $id;
+    CORE::die "no id argument to job_signal" unless defined $id;
 
     my $pids=$self->job_properties(id=>$id)->prop_get('pids');
     if ($pids && $pids=~/\S/) {
@@ -500,7 +500,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my %hprms=@_;
     my $id=$hprms{id};
-    die "no id argument to job_submit" unless defined $id;
+    CORE::die "no id argument to job_submit" unless defined $id;
     my $j=$self->__joblist->{$id};
 
     return undef unless defined $j;
@@ -511,7 +511,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my %hprms=@_;
     my $id=$hprms{id};
-    die "no id argument to job_submit" unless defined $id;
+    CORE::die "no id argument to job_submit" unless defined $id;
     my $j=$self->__joblist->{$id};
 
     return undef unless defined $j;
@@ -522,7 +522,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub job_properties{
     my $self=shift;
     my %hprms=@_;
-    die "no id argument to job_properties" unless defined $hprms{id};
+    CORE::die "no id argument to job_properties" unless defined $hprms{id};
     my $id=$hprms{id};
     return $self->__jobs_properties->{$id} if defined $self->__jobs_properties->{$id};
     my $pfile=$self->__joblist->{$id}{dir}."/batch.properties";
@@ -535,17 +535,31 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub job_execute{
     my $self=shift;
     my %hprms=@_;
-    die "no id argument to job_execute" unless defined $hprms{id};
+    CORE::die "no id argument to job_execute" unless defined $hprms{id};
     my $id=$hprms{id};
     print {*STDLOG} info => "job id [$id]: DefaultScheduler executing\n";
-    my $job=$self->__joblist->{$id} or die "no job defined for if [$id]";
+    my $job=$self->__joblist->{$id} or CORE::die "no job defined for if [$id]";
     my $dir=$job->{dir};
 
     my $cmd;
     my $isScript;
     if (-f $job->{command}) {
       $cmd=$self->__job_execute_scriptmorfer(id=>$id, script=>$job->{command});
-      $cmd="sh $cmd" unless -x $cmd && $OSNAME!~/win/i;
+      if($OSNAME=~/win/i){
+	if($job->{command}=~/pl$/){
+	  $cmd="cmd /C $^X $cmd";
+	}else{
+	  $cmd="cmd /C $cmd";
+	}
+      }else{
+	unless (-x $cmd){
+	  if($job->{command}=~/pl$/){
+	    $cmd="$^X $cmd";
+	  }else{
+	    $cmd="sh $cmd";
+	  }
+	}
+      }
     } else {
       $cmd=$job->{command};
     }
@@ -557,7 +571,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     #    print STDERR "TODO job_execute: management std(out|err)\n";
     $cmd.=" 1>$dir/stdout 2>$dir/stderr";
 
-    my $queueName=$job->{queue}or die "cannot __job_execute_scriptmorfer on a job ($id) with no attributed queue";
+    my $queueName=$job->{queue}or CORE::die "cannot __job_execute_scriptmorfer on a job ($id) with no attributed queue";
     my $queue=$self->__queues->{$queueName};
     print {*STDLOG} info => "job id [$id]: DefaultScheduler queue [$queueName]\n";
 
@@ -641,21 +655,21 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub __job_execute_scriptmorfer{
     my $self=shift;
     my %hprms=@_;
-    die "no id argument to __job_execute_scriptmorfer" unless defined $hprms{id};
+    CORE::die "no id argument to __job_execute_scriptmorfer" unless defined $hprms{id};
     my $id=$hprms{id};
-    my $script=$hprms{script} or die "no script argument to __job_execute_scriptmorfer";
-    die "[$script] is not a fil" unless -f $script;
+    my $script=$hprms{script} or CORE::die "no script argument to __job_execute_scriptmorfer";
+    CORE::die "[$script] is not a fil" unless -f $script;
     my $contents;
     {
       local $/;
-      open (FD, "<$script") or die "cannot open for reading [$script]";
+      open (FD, "<$script") or CORE::die "cannot open for reading [$script]";
       $contents=<FD>;
       close FD;
     }
 
     $contents=~s/\$\{jobid\}/$id/gi;
     my $job=$self->__joblist->{$id};
-    my $queueName=$job->{queue}or die "cannot __job_execute_scriptmorfer on a job ($id) with no attributed queue";
+    my $queueName=$job->{queue}or CORE::die "cannot __job_execute_scriptmorfer on a job ($id) with no attributed queue";
     $contents=~s/\$\{queue\}/$queueName/gi;
     my $queue=$self->__queues->{$queueName};
     my $rtype=$queue->{resource}{type};
@@ -666,7 +680,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
     my $nbnodes=0;
     if ($mfile) {
-      open (FH, "<$mfile") or die "cannot open machinefile $mfile: $!";
+      open (FH, "<$mfile") or CORE::die "cannot open machinefile $mfile: $!";
       while (<FH>) {
 	chomp;
 	s/#.*//;
@@ -677,7 +691,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       $contents=~s/\$\{nbmachines\}/$nbnodes/gi ;
     }
     my $run="$script.run";
-    open (FD, ">$run") or die "cannot open for writing [$run]";
+    open (FD, ">$run") or CORE::die "cannot open for writing [$run]";
     print FD $contents;
     close FD;
     return $run;
@@ -801,7 +815,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $set=$_[0];
     my $val=shift;
     if ($set) {
-      die "no schedulingSub for method name [$val]: possible are:(".join('|', scheduling_methodList()).")" unless $schedulingSortSub{$val};
+      CORE::die "no schedulingSub for method name [$val]: possible are:(".join('|', scheduling_methodList()).")" unless $schedulingSortSub{$val};
       $self->__scheduling_method($schedulingSortSub{$val});
       $self->__scheduling_methodName($val);
     }
@@ -880,7 +894,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     foreach (@pendingJobs) {
       my $n=$_->{queue};
       next if $qname{$n};
-      die "queue [$n] does not exists" unless $self->__queues_exist($n);
+      CORE::die "queue [$n] does not exists" unless $self->__queues_exist($n);
       $qname{$n}=1;
     }
     return (\@pendingJobs, \@availResources);
@@ -927,6 +941,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my ($ja, $jb, $queues)=@_;
     my $prio_a=$queues->{$ja->{queue}}->{priority};
     my $prio_b=$queues->{$jb->{queue}}->{priority};
+    return (0<=>1) if (!defined $prio_a) && (!defined $prio_b);
+    return (0<=>1) unless defined $prio_a;
+    return (1<=>0) unless defined $prio_b;
     if ($prio_a eq $prio_b) {
       return $ja->{id} <=> $jb->{id};
     } else {
@@ -969,7 +986,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	}
 
 	#then we have a ring of queue in @curQPrio;
-	my @curRing=sort {$qstatus->{$a}{accesstime} <=> $qstatus->{$b}{accesstime}} keys %curQlist;
+	my @curRing=sort {($qstatus->{$a}{accesstime}||0) <=> ($qstatus->{$b}{accesstime}||0)} keys %curQlist;
 	while (@curRing) {
 	  my $q=shift @curRing;
 	  my $j=shift @{$curQlist{$q}};
@@ -1022,7 +1039,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $qname=shift;
     my $res=shift;
     unless ($self->__queues->{$qname}{resource}{properties}) {
-      return $self->__queues->{$qname}{resource}{type} eq $res->{type};
+      return (defined  $self->__queues->{$qname}{resource}{type}) && $self->__queues->{$qname}{resource}{type} eq $res->{type};
     }
     my $qp=$self->__queues->{$qname}{resource}{properties};
     return 0 unless exists $self->__resources->{$res->{type}}{$res->{name}}{properties};
@@ -1038,9 +1055,9 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub __queue_insert{
     my $self=shift;
     my %hprms=@_;
-    my $queue=$hprms{queue} or die "no queue defined for __queue_insert";
-    my $job=$hprms{job} or die "no job defined for __queue_insert";
-    my $resourceStatus=$hprms{resourceStatus} or die "no resourceStatus defined for __queue_insert";
+    my $queue=$hprms{queue} or CORE::die "no queue defined for __queue_insert";
+    my $job=$hprms{job} or CORE::die "no job defined for __queue_insert";
+    my $resourceStatus=$hprms{resourceStatus} or CORE::die "no resourceStatus defined for __queue_insert";
 
     $job->{resource}=$resourceStatus->{name};
     $job->{status}='READY';
@@ -1052,10 +1069,10 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub __queue_remove{
     my $self=shift;
     my %hprms=@_;
-    my $job=$hprms{job} or die "no job defined for __queue_remove";
-    my $queue=$job->{queue} or die "no queue could be defined from job  [$job->{id}] in  __queue_remove";
-    die "queue [$queue] does not exist" unless $self->__queues_exist($queue);
-    my $resourceStatus=$self->__resourcesStatus->{ $self->__queues->{$job->{queue}}{resource}{type}}{$job->{resource}} or die "no resourceStatus could be deduce from job [$job->{id}] for __queue_remove";
+    my $job=$hprms{job} or CORE::die "no job defined for __queue_remove";
+    my $queue=$job->{queue} or CORE::die "no queue could be defined from job  [$job->{id}] in  __queue_remove";
+    CORE::die "queue [$queue] does not exist" unless $self->__queues_exist($queue);
+    my $resourceStatus=$self->__resourcesStatus->{ $self->__queues->{$job->{queue}}{resource}{type}}{$job->{resource}} or CORE::die "no resourceStatus could be deduce from job [$job->{id}] for __queue_remove";
 
     my $jobStatus=$hprms{jobstatus}||'EXIT';
 
@@ -1079,7 +1096,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub __queuesstatus_touch{
     my $self=shift;
     my %hprms=@_;
-    my $q=$hprms{queue} or die "must give a [queue argument]";
+    my $q=$hprms{queue} or CORE::die "must give a [queue argument]";
 
     $self->__queuesStatus->{$q}{accesstime}=time;
   }
@@ -1090,7 +1107,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my %hprms=@_;
     if ($hprms{file}) {
       my $twig=XML::Twig->new();
-      $twig->parsefile($hprms{file}) or die "cannot xml parse file $hprms{file}: $!";
+      $twig->parsefile($hprms{file}) or die  "cannot xml parse file $hprms{file}: $!";
       return $self->readConfig(twigelt=>$twig->root);
     }
     if (my $rootel=$hprms{twigelt}) {
@@ -1109,13 +1126,13 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	#Log::StdLog->import({level=>'warn', handle=>\*STDERR});
       }
 
-      my $el=$rootel->first_child('schedulingMethod') or die "must set a /schedulingMethod element in xml config file";
+      my $el=$rootel->first_child('schedulingMethod') or CORE::die "must set a /schedulingMethod element in xml config file";
       $self->scheduling_method($el->text);
-      $el=$rootel->first_child('joblistIndex') or die "must set a /joblistIndex element in xml config file";
+      $el=$rootel->first_child('joblistIndex') or CORE::die "must set a /joblistIndex element in xml config file";
       $self->joblist_index($el->text);
-      $el=$rootel->first_child('resourcesIndex') or die "must set a /resourcesIndex element in xml config file";
+      $el=$rootel->first_child('resourcesIndex') or CORE::die "must set a /resourcesIndex element in xml config file";
       $self->resourcesStatus_index($el->text);
-      $el=$rootel->first_child('queuesIndex') or die "must set a /queuesesIndex element in xml config file";
+      $el=$rootel->first_child('queuesIndex') or CORE::die "must set a /queuesesIndex element in xml config file";
       $self->queuesStatus_index($el->text);
 
       if ($el=$rootel->first_child('autoupdate')) {
@@ -1133,15 +1150,15 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
       my %rsc;
       foreach $el($rootel->get_xpath("resourcesList/oneResource")) {
-	my $type=$el->atts->{type} or die "no type attribute to [resourcesList/oneResource]";
-	my $name=$el->first_child('name') && $el->first_child('name')->text or die "no name field for resource";
+	my $type=$el->atts->{type} or CORE::die "no type attribute to [resourcesList/oneResource]";
+	my $name=$el->first_child('name') && $el->first_child('name')->text or CORE::die "no name field for resource";
 	my $properties;
 	foreach ($el->get_xpath('property')) {
 	  $properties->{$_->atts->{name}}=$_->text;
 	}
-	die "duplicate resource name [$name] for type [$type]" if exists $rsc{$type} && exists $rsc{$type}{$name};
+	CORE::die "duplicate resource name [$name] for type [$type]" if exists $rsc{$type} && exists $rsc{$type}{$name};
 	if ($type eq 'cluster') {
-	  my $machineFile=$el->first_child('machineFile') && $el->first_child('machineFile')->text or die "no machineFile field for cluster resource";
+	  my $machineFile=$el->first_child('machineFile') && $el->first_child('machineFile')->text or CORE::die "no machineFile field for cluster resource";
 	  $machineFile=dirname($hprms{dir})."/$machineFile" unless dirname $machineFile;
 	  $rsc{$type}{$name}={
 			      name=>$name,
@@ -1149,7 +1166,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 			     };
 	  $rsc{$type}{$name}{properties}=$properties if $properties;
 	} elsif ($type eq 'machine') {
-	  my $host=$el->first_child('host') && $el->first_child('host')->text or die "no host field for machine resource";
+	  my $host=$el->first_child('host') && $el->first_child('host')->text or CORE::die "no host field for machine resource";
 	  $host=dirname($hprms{dir})."/$host" unless dirname $host;
 	  $rsc{$type}{$name}={
 			      name=>$name,
@@ -1157,16 +1174,16 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 			     };
 	  $rsc{$type}{$name}{properties}=$properties if $properties;
 	} else {
-	  die "no resource available for type [$type]\n";
+	  CORE::die "no resource available for type [$type]\n";
 	}
       }
       $self->__resources(\%rsc);
 
       my %q;
       foreach $el($rootel->get_xpath("queueList/oneQueue")) {
-	my $name=$el->first_child('name') && $el->first_child('name')->text or die "no name field for oneQueue";
-	die "duplicate queue name [$name]" if exists $q{$name};
-	my $priority=$el->first_child('priority') && $el->first_child('priority')->text or die "no priority field for oneQueue (name=$name)";
+	my $name=$el->first_child('name') && $el->first_child('name')->text or CORE::die "no name field for oneQueue";
+	CORE::die "duplicate queue name [$name]" if exists $q{$name};
+	my $priority=$el->first_child('priority') && $el->first_child('priority')->text or CORE::die "no priority field for oneQueue (name=$name)";
 	my %qrsc;
 	foreach ($el->first_child('resource')->children) {
 	  next if $_->gi eq 'property';
@@ -1177,7 +1194,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	  $properties->{$_->atts->{name}}=$_->text;
 	}
 	$qrsc{properties}=$properties if $properties;
-	die "no resource type for oneQueue (name=$name)" unless $qrsc{type};
+	CORE::die "no resource type for oneQueue (name=$name)" unless $qrsc{type};
 	$q{$name}={
 		   priority=>$priority,
 		   resource=>\%qrsc,
@@ -1191,7 +1208,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       $self->__queues(\%q);
       return $self;
     }
-    die "neither [file=>] nor [twigelt=>] arg was passed to readConfig";
+    CORE::die "neither [file=>] nor [twigelt=>] arg was passed to readConfig";
   }
   use overload '""' => sub{return $_[0]->toString};
 
@@ -1291,7 +1308,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       }
       my $hjl=$self->__joblist();
       foreach (sort {$b <=> $a} keys %$hjl) {
-	$ret.="$hjl->{$_}{id}\t$hjl->{$_}{status}\t$hjl->{$_}{queue}\t".($hjl->{$_}{resource} or '')."\t".($hjl->{$_}{title} or '')."\t$hjl->{$_}{dir}\t".basename($hjl->{$_}{command} || '!!!')."\n";
+	$ret.=($hjl->{$_}{id} or 'NOID')."\t".($hjl->{$_}{status} or 'NOSTATUS')."\t".($hjl->{$_}{queue} or 'NOQUEUE')."\t".($hjl->{$_}{resource} or '')."\t".($hjl->{$_}{title} or '')."\t".($hjl->{$_}{dir} or 'NODIR')."\t".basename($hjl->{$_}{command} || 'NOCOMMAND')."\n";
       }
     }
 
@@ -1302,7 +1319,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
   sub dataRequest{
     my $self=shift;
     my %hprms=@_;
-    my $requests=$hprms{request} or die "must provide a [request] argument";
+    my $requests=$hprms{request} or CORE::die "must provide a [request] argument";
     my %reth;
     foreach (split /,/, $requests) {
       if (/^joblist$/i) {
@@ -1364,7 +1381,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	}
 	next;
       }
-      die "unknown request [$_]";
+      CORE::die "unknown request [$_]";
     }
     return \%reth;
 
