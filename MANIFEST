@@ -9,7 +9,6 @@ examples/mpitest.sh
 examples/olavdev-cluster.mach
 examples/README.txt
 examples/sbsconfig-examples-1.xml
-examples/sbsconfig-windows.xml
 examples/vs-cluster.mach
 cgi/cgiSBS-info.pl
 lib/BatchSystem/SBS.pm

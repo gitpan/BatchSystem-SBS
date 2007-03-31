@@ -88,7 +88,7 @@ sub lockFile{
   if($simpleLocker){
     return $simpleLocker->trylock($f) or CORE::die  "cannot lock [$f]: $!";
   }else{
-    File::Flock::lock("$f.flck", $OSNAME=~'shared') or CORE::die  "cannot lock ($f): $!";
+    File::Flock::lock("$f.flck", (($OSNAME=~/win/i)?'shared':'')) or CORE::die  "cannot lock ($f): $!";
   }
 }
 

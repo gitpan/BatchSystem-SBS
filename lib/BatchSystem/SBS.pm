@@ -185,7 +185,7 @@ use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
 
-our $VERSION="0.29";
+our $VERSION="0.30";
 
 {
   use Object::InsideOut;

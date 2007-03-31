@@ -221,7 +221,7 @@ stores the queuse status (last acession time...)
 Synchronize data with dump file
 
 
-=head2 I/O
+=head2 IO
 
 =head3 $scheduler->readConfig(twigelt=>XML::Twig::Elt)
 
