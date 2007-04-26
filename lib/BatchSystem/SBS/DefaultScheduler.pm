@@ -1123,7 +1123,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	  my $level=$el->first_child('level')?$el->first_child('level')->text:'warn';
 	  Log::StdLog->import({level=>$level, handle=>$FHLOG_SCHEDULER});
       }else{
-	#Log::StdLog->import({level=>'warn', handle=>\*STDERR});
+	Log::StdLog->import({level=>'warn', handle=>\*STDERR});
       }
 
       my $el=$rootel->first_child('schedulingMethod') or CORE::die "must set a /schedulingMethod element in xml config file";

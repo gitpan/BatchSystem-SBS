@@ -185,7 +185,7 @@ use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
 
-our $VERSION="0.30";
+our $VERSION="0.31";
 
 {
   use Object::InsideOut;
@@ -292,7 +292,7 @@ our $VERSION="0.30";
       return "1";
     }
     lockFile("$f") || CORE::die "can't lock [$f]: $!\n"; 
-   my $i=IO::All::io($f)->slurp;
+   my $i=io($f)->slurp;
     chomp $i;
     $i++;
     open (FD, ">$f") or CORE::die "canot open for writing [$f]: $!";
