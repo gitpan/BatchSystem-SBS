@@ -75,12 +75,11 @@ our @EXPORT=qw(&init $sbs);
 our $sbs;
 sub init{
   my $p=new Getopt::Long::Parser;
-  $p->configure("require_order", "permute", "pass_through");
+  $p->configure("pass_through");
   my($configfile, $workingDir);
   if (!$p->getoptions(
 		  "config=s"=>\$configfile,
 		  "workingdir=s"=>\$workingDir,
-		  
 		 )
      ){
   }

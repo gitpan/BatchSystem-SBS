@@ -185,7 +185,7 @@ use BatchSystem::SBS::DefaultScheduler;
 use BatchSystem::SBS::Common qw(lockFile unlockFile);
 
 
-our $VERSION="0.31";
+our $VERSION="0.32";
 
 {
   use Object::InsideOut;
@@ -239,11 +239,18 @@ our $VERSION="0.31";
   sub job_remove{
     my $self=shift;
     my %hprms=@_;
-    my $jid=$hprms{id} ;
+    my $jid=$hprms{id};
+    my $isFinished=$hprms{isfinished};
     CORE::die "no id argument to job_remove" unless defined $jid;
-    $self->scheduler->job_remove(id=>$jid);
-    my $dir=$self->jobs_dir()."/$jid";
-    rmtree $dir or CORE::die "cannot remove directory [$dir]: $!";
+    my $deleted=$self->scheduler->job_remove(id=>$jid, isfinished=>$isFinished);
+    if($deleted){
+      my $dir=$self->jobs_dir()."/$jid";
+      rmtree $dir or CORE::die "cannot remove directory [$dir]: $!";
+      return 1;
+    }else{
+      #warn "job [$jid] was not finished\n";
+      return 0;
+    }
   }
 
   sub job_action{

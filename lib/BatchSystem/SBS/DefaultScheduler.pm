@@ -419,16 +419,27 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $self=shift;
     my %hprms=@_;
     my $id=$hprms{id};
+    my $isFinished=$hprms{isfinished};
+
     CORE::die "no id argument to job_submit" unless defined $id;
 
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
     unless (exists $self->__joblist()->{$id}) {
-      carp "CANNOT REMOVE job [$id]: does not exist";
-      return $self;
+      warn "CANNOT REMOVE job [$id]: does not exist";
+      $self->__unlockdata();
+      return 0;
     }
     my $job=$self->__joblist()->{$id};
-    $self->job_signal(id=>$id, signal=>'KILL');
+    if($isFinished && $job->{status}!~$FINISHED_JOB_STATUS){
+      warn "CANNOT REMOVE job [$id]: not finished";
+      $self->__unlockdata();
+      return 0;
+    }
+
+    if($job->{status}=~$RUNNING_JOB_STATUS){
+      $self->job_signal(id=>$id, signal=>'KILL');
+    }
     if ($job->{resource}) {
       $self->__resourcesStatus_pump(nolock=>1);
       $self->__queuesStatus_pump(nolock=>1);
@@ -443,7 +454,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     delete $self->__joblist()->{$id};
     $self->__joblist_dump(nolock=>1);
     $self->__unlockdata();
-    return $self;
+    return 1;
   }
 
   sub job_action{
