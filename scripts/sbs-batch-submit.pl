@@ -30,3 +30,4 @@ foreach(@command){
 }
 $sbs->scheduler->scheduling_update();
 print {*BatchSystem::SBS::STDLOG} info=> "submited job(s) [@ids]\n";
+print "$_\n" foreach (@ids);
