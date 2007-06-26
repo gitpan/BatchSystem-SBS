@@ -28,6 +28,7 @@ WriteMakefile
           'EXE_FILES' => [
                            'scripts/sbs-batch-action.pl',
                            'scripts/sbs-batch-check.pl',
+                           'scripts/sbs-batch-info.pl',
                            'scripts/sbs-batch-remove.pl',
                            'scripts/sbs-batch-submit.pl',
                            'scripts/sbs-scheduler-print.pl',
