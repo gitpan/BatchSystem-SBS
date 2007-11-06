@@ -129,6 +129,10 @@ All what concerns the machine & cluster ready to make computations
 
 Make a coherence check of the resources status (if a resource is attributed to a dead job, for example, it will be freed). This should not be called, except to solve some spurious locking problems - that shoould anyway not exist anymore...
 
+=head3 $scheduler->resources_removenull()
+
+remove null ID job (well, that's not the cleverest piece of code design...)
+
 =head3 $scheduler->resourcesStatus_init()
 
 Synchronize resources defined in the configuration with the one in resourcesStatus()
@@ -294,6 +298,7 @@ my @__queuesStatus :Field(Accessor => '__queuesStatus', 'Type' => 'Hash', Permis
 #the list of queue names that where declared at start (check for regular exepression);
 my @__queues_orig :Field(Accessor => '__queues_orig', 'Type' => 'HASH', Permission => 'private');
 my @__autoupdate :Field(Accessor => '__autoupdate', Permission => 'private');
+my @__autoremove :Field(Accessor => '__autoremove', Permission => 'private');
 
 my @joblist_index :Field(Accessor => 'joblist_index');
 my @resourcesStatus_index :Field(Accessor => 'resourcesStatus_index');
@@ -421,7 +426,8 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $id=$hprms{id};
     my $isFinished=$hprms{isfinished};
 
-    CORE::die "no id argument to job_submit" unless defined $id;
+    print {*STDLOG} info => "job id [$id]: trying removed\n";
+    CORE::die "no id argument to job_remove" unless defined $id;
 
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
@@ -451,6 +457,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       $self->__queuesStatus_dump(nolock=>1);
       $self->__resourcesStatus_dump(nolock=>1);
     }
+    print {*STDLOG} info => "job id [$id]: removed\n";
     delete $self->__joblist()->{$id};
     $self->__joblist_dump(nolock=>1);
     $self->__unlockdata();
@@ -652,6 +659,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 	  $self->__unlockdata();
 
 	  $self->scheduling_update if $self->__autoupdate();
+	  $self->job_remove(id=>$id) if $self->__autoremove();
 	}
 	exit 0;
       } elsif ($! == EAGAIN) {
@@ -762,7 +770,7 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
 
   sub resources_check{
     my $self=shift;
-    
+
     $self->__lockdata();
     $self->__joblist_pump(nolock=>1);
     $self->__resourcesStatus_pump(nolock=>1);
@@ -804,6 +812,26 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     $self->__joblist_dump(nolock=>1);
     $self->__unlockdata();
   }
+
+  sub resources_removenull{
+    my $self=shift;
+
+    $self->__lockdata();
+    $self->__joblist_pump(nolock=>1);
+    $self->__resourcesStatus_pump(nolock=>1);
+    my $hjl=$self->__joblist();
+    foreach (sort {$b <=> $a} keys %$hjl) {
+      unless($hjl->{$_}{id}){
+	warn "null job id defined for [$_]";
+	delete $self->__joblist()->{$_};
+      }
+    }
+    $self->__resourcesStatus_dump(nolock=>1);
+    $self->__joblist_dump(nolock=>1);
+    $self->__unlockdata();
+  }
+
+
 
   ############## check coherence
 
@@ -1158,6 +1186,18 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       } else {
 	$self->__autoupdate(1);
       }
+      if ($el=$rootel->first_child('autoremove')) {
+	my $str=$el->text;
+	if ($str=~/^y(es)?$/i) {
+	  $self->__autoremove(1);
+	} elsif ($str=~/^n(o)?$/i) {
+	  $self->__autoremove(0);
+	} else {
+	  $self->__autoremove($str);
+	}
+      } else {
+	$self->__autoremove(0);
+      }
 
       my %rsc;
       foreach $el($rootel->get_xpath("resourcesList/oneResource")) {
@@ -1320,6 +1360,8 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
       my $hjl=$self->__joblist();
       foreach (sort {$b <=> $a} keys %$hjl) {
 	$ret.=($hjl->{$_}{id} or 'NOID')."\t".($hjl->{$_}{status} or 'NOSTATUS')."\t".($hjl->{$_}{queue} or 'NOQUEUE')."\t".($hjl->{$_}{resource} or '')."\t".($hjl->{$_}{title} or '')."\t".($hjl->{$_}{dir} or 'NODIR')."\t".basename($hjl->{$_}{command} || 'NOCOMMAND')."\n";
+	unless($hjl->{$_}{id}){
+	}
       }
     }
 

@@ -2,29 +2,9 @@
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
-          'NAME' => 'BatchSystem::SBS',
-          'VERSION_FROM' => './lib/BatchSystem/SBS.pm',
-          'PREREQ_PM' => {
-                           'Cwd' => '0',
-                           'Data::Serializer' => '0',
-                           'File::Basename' => '0',
-                           'File::Copy' => '0',
-                           'File::Flock' => '0',
-                           'File::Path' => '0',
-                           'File::Spec' => '0',
-                           'File::Temp' => '0',
-                           'Getopt::Long' => '0',
-                           'IO::All' => '0',
-                           'JSON' => '0',
-                           'List::Util' => '0',
-                           'LockFile::Simple' => '0',
-                           'Log::StdLog' => '0',
-                           'Object::InsideOut' => '0',
-                           'Test::More' => '0',
-                           'Util::Properties' => '0',
-                           'XML::Twig' => '3.14'
-                         },
+          'PL_FILES' => {},
           'INSTALLDIRS' => 'site',
+          'NAME' => 'BatchSystem::SBS',
           'EXE_FILES' => [
                            'scripts/sbs-batch-action.pl',
                            'scripts/sbs-batch-check.pl',
@@ -34,6 +14,26 @@ WriteMakefile
                            'scripts/sbs-scheduler-print.pl',
                            'scripts/sbs-scheduler-update.pl'
                          ],
-          'PL_FILES' => {}
+          'VERSION_FROM' => './lib/BatchSystem/SBS.pm',
+          'PREREQ_PM' => {
+                           'IO::All' => 0,
+                           'File::Spec' => 0,
+                           'List::Util' => 0,
+                           'File::Flock' => 0,
+                           'Data::Serializer' => 0,
+                           'File::Path' => 0,
+                           'Log::StdLog' => 0,
+                           'Object::InsideOut' => 0,
+                           'Getopt::Long' => 0,
+                           'File::Copy' => 0,
+                           'XML::Twig' => '3.14',
+                           'LockFile::Simple' => 0,
+                           'Test::More' => 0,
+                           'File::Temp' => 0,
+                           'Util::Properties' => 0,
+                           'JSON' => 0,
+                           'File::Basename' => 0,
+                           'Cwd' => 0
+                         }
         )
 ;
