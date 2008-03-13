@@ -697,6 +697,14 @@ our $RUNNING_JOB_STATUS=qr/^(RESERVED|RUNNING)$/i;
     my $host=$self->__resources->{$rtype}{$job->{resource}}{host} || '';
     $contents=~s/\$\{host\}/$host/gi;
 
+    if (my $p=$self->__resources->{$rtype}{$job->{resource}}{properties}){
+      foreach (keys %$p){
+	$contents=~s/\$\{resource\.properties\.$_\}/$p->{$_}/gi;
+      }
+    }
+    $contents=~s/\$\{[\w\.]+\}//g;
+
+
     my $nbnodes=0;
     if ($mfile) {
       open (FH, "<$mfile") or CORE::die "cannot open machinefile $mfile: $!";
